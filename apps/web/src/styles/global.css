@@ -204,6 +204,44 @@ button {
   box-shadow: 0 6px 16px rgba(228, 111, 93, 0.4);
 }
 
+.marker-callout {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--color-paper);
+  color: var(--color-ink);
+  padding: 5px 11px;
+  border-radius: 14px;
+  box-shadow: 0 4px 14px rgba(32, 37, 34, 0.18);
+  border: 1px solid rgba(32, 37, 34, 0.1);
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  pointer-events: none;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease forwards;
+}
+
+.marker-callout::after {
+  content: "";
+  position: absolute;
+  bottom: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 5px 5px 0;
+  border-style: solid;
+  border-color: var(--color-paper) transparent transparent;
+}
+
+.marker-callout .callout-time {
+  color: var(--color-coral);
+  font-weight: 700;
+}
+
 /* Animations */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(6px); }

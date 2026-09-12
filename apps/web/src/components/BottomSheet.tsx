@@ -1,11 +1,13 @@
 import { RecommendationItem } from "@tteum/contracts";
-import { ChevronRight, ShieldCheck, Footprints, Clock } from "lucide-react";
+import { ChevronRight, ShieldCheck, Footprints, Clock, ChevronUp, ChevronDown } from "lucide-react";
 
 interface BottomSheetProps {
   recommendations: RecommendationItem[];
   selectedIndex: number;
   onSelectIndex: (index: number) => void;
   onOpenDetail: (item: RecommendationItem) => void;
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
 }
 
 export default function BottomSheet({
@@ -13,6 +15,8 @@ export default function BottomSheet({
   selectedIndex,
   onSelectIndex,
   onOpenDetail,
+  isCollapsed = false,
+  onToggleCollapse,
 }: BottomSheetProps) {
   if (recommendations.length === 0) return null;
 
@@ -40,17 +44,46 @@ export default function BottomSheet({
         bottom: 0,
         left: 0,
         right: 0,
-        padding: "16px 16px 24px",
-        background: "linear-gradient(to top, rgba(244, 241, 233, 0.98) 80%, rgba(244, 241, 233, 0))",
+        padding: isCollapsed ? "8px 16px 16px" : "12px 16px 22px",
+        background: isCollapsed
+          ? "rgba(244, 241, 233, 0.92)"
+          : "linear-gradient(to top, rgba(244, 241, 233, 0.98) 85%, rgba(244, 241, 233, 0))",
+        backdropFilter: isCollapsed ? "blur(8px)" : undefined,
+        WebkitBackdropFilter: isCollapsed ? "blur(8px)" : undefined,
         zIndex: 30,
         display: "flex",
         flexDirection: "column",
-        gap: "10px",
+        gap: "8px",
+        transition: "all 0.25s ease",
       }}
     >
+      {/* Drag Handle / Toggle Button */}
+      <div
+        onClick={onToggleCollapse}
+        role="button"
+        tabIndex={0}
+        aria-label={isCollapsed ? "상세 카드 펼치기" : "지도 넓게 보기 (카드 접기)"}
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          padding: "4px 0 6px",
+          cursor: "pointer",
+        }}
+      >
+        <div
+          style={{
+            width: "36px",
+            height: "4px",
+            borderRadius: "2px",
+            backgroundColor: "rgba(32, 37, 34, 0.2)",
+          }}
+        />
+      </div>
+
       {/* Indicator Dots if multiple recommendations */}
       {recommendations.length > 1 && (
-        <div style={{ display: "flex", justifyContent: "center", gap: "6px", marginBottom: "4px" }}>
+        <div style={{ display: "flex", justifyContent: "center", gap: "6px", marginBottom: "2px" }}>
           {recommendations.map((_, idx) => (
             <button
               key={idx}
@@ -68,18 +101,20 @@ export default function BottomSheet({
         </div>
       )}
 
-      {/* Main Selected Card */}
-      <div
-        className="card-paper animate-fade-in"
-        onClick={() => onOpenDetail(current)}
-        style={{
-          padding: "20px",
-          cursor: "pointer",
-          transition: "transform var(--transition-fast)",
-        }}
-      >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+      {isCollapsed ? (
+        /* Compact Peek Card when collapsed */
+        <div
+          className="card-paper animate-fade-in"
+          onClick={onToggleCollapse}
+          style={{
+            padding: "12px 16px",
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <span
               style={{
                 display: "inline-flex",
@@ -88,7 +123,7 @@ export default function BottomSheet({
                 width: "22px",
                 height: "22px",
                 borderRadius: "6px",
-                backgroundColor: "var(--color-ink)",
+                backgroundColor: "var(--color-coral)",
                 color: "var(--color-paper)",
                 fontSize: "12px",
                 fontWeight: 700,
@@ -96,24 +131,88 @@ export default function BottomSheet({
             >
               {selectedIndex + 1}
             </span>
-            <span className="text-caption" style={{ color: "var(--color-ink-muted)", fontWeight: 500 }}>
-              {current.place.areaName} · {current.place.name}
-            </span>
+            <div>
+              <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--color-ink)", marginRight: "6px" }}>
+                {current.place.name}
+              </span>
+              <span className="text-caption" style={{ color: "var(--color-coral)", fontWeight: 600 }}>
+                도보 {current.timeline.outboundMinutes}분 · {current.timeline.totalMinutes}분 완결
+              </span>
+            </div>
           </div>
-
-          <div
-            style={{
-              padding: "3px 8px",
-              borderRadius: "var(--radius-chip)",
-              backgroundColor: "rgba(32, 37, 34, 0.05)",
-              color: crowd.color,
-              fontSize: "11px",
-              fontWeight: 600,
-            }}
-          >
-            {crowd.text}
+          <div style={{ display: "flex", alignItems: "center", gap: "4px", color: "var(--color-dusk)", fontSize: "12px", fontWeight: 600 }}>
+            <span>펼치기</span>
+            <ChevronUp size={16} />
           </div>
         </div>
+      ) : (
+        /* Full Expanded Card */
+        <div
+          className="card-paper animate-fade-in"
+          style={{
+            padding: "18px 20px 20px",
+            cursor: "pointer",
+            transition: "transform var(--transition-fast)",
+          }}
+        >
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }} onClick={() => onOpenDetail(current)}>
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: "22px",
+                  height: "22px",
+                  borderRadius: "6px",
+                  backgroundColor: "var(--color-ink)",
+                  color: "var(--color-paper)",
+                  fontSize: "12px",
+                  fontWeight: 700,
+                }}
+              >
+                {selectedIndex + 1}
+              </span>
+              <span className="text-caption" style={{ color: "var(--color-ink-muted)", fontWeight: 500 }}>
+                {current.place.areaName} · {current.place.name}
+              </span>
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <div
+                style={{
+                  padding: "3px 8px",
+                  borderRadius: "var(--radius-chip)",
+                  backgroundColor: "rgba(32, 37, 34, 0.05)",
+                  color: crowd.color,
+                  fontSize: "11px",
+                  fontWeight: 600,
+                }}
+              >
+                {crowd.text}
+              </div>
+              {onToggleCollapse && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggleCollapse();
+                  }}
+                  title="지도 넓게 보기"
+                  aria-label="지도 넓게 보기"
+                  style={{
+                    background: "none",
+                    border: "none",
+                    padding: "2px",
+                    cursor: "pointer",
+                    color: "var(--color-ink-muted)",
+                  }}
+                >
+                  <ChevronDown size={18} />
+                </button>
+              )}
+            </div>
+          </div>
 
         {/* Title & Line */}
         <h2
@@ -188,6 +287,7 @@ export default function BottomSheet({
           </div>
         </div>
       </div>
+      )}
     </div>
   );
 }

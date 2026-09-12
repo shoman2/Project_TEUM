@@ -25,6 +25,7 @@ export default function S04RecommendationMap({
   onSelectDetail,
 }: S04RecommendationMapProps) {
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const getStatusLabel = () => {
     switch (dataStatus) {
@@ -99,6 +100,7 @@ export default function S04RecommendationMap({
           recommendations={recommendations}
           selectedIndex={selectedIndex}
           onSelectIndex={setSelectedIndex}
+          isCollapsed={isCollapsed}
         />
       </div>
 
@@ -108,6 +110,8 @@ export default function S04RecommendationMap({
         selectedIndex={selectedIndex}
         onSelectIndex={setSelectedIndex}
         onOpenDetail={onSelectDetail}
+        isCollapsed={isCollapsed}
+        onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
       />
     </div>
   );

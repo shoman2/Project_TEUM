@@ -1,12 +1,14 @@
 import { useEffect, useRef } from "react";
 import L from "leaflet";
 import { RecommendationItem } from "@tteum/contracts";
+import { Navigation } from "lucide-react";
 
 interface MapViewProps {
   userLocation: { lat: number; lng: number };
   recommendations: RecommendationItem[];
   selectedIndex: number;
   onSelectIndex: (index: number) => void;
+  isCollapsed?: boolean;
 }
 
 export default function MapView({
@@ -14,17 +16,19 @@ export default function MapView({
   recommendations,
   selectedIndex,
   onSelectIndex,
+  isCollapsed = false,
 }: MapViewProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markersRef = useRef<L.Marker[]>([]);
   const userMarkerRef = useRef<L.Marker | null>(null);
+  const walkingRouteRef = useRef<L.Polyline | null>(null);
 
+  // Initialize map
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
     if (!mapInstanceRef.current) {
-      // Initialize map
       const map = L.map(mapContainerRef.current, {
         zoomControl: false,
         attributionControl: false,
@@ -39,10 +43,6 @@ export default function MapView({
 
       mapInstanceRef.current = map;
     }
-
-    return () => {
-      // Keep map alive across standard re-renders unless unmounted completely
-    };
   }, []);
 
   // Update user location marker
@@ -72,26 +72,51 @@ export default function MapView({
     }).addTo(map);
   }, [userLocation]);
 
-  // Update recommendation markers
+  // Recenter/frame user and selected destination
+  const frameSelectedRoute = (animated = true) => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    const target = recommendations[selectedIndex]?.place;
+    if (!target) return;
+
+    const bounds = L.latLngBounds(
+      [userLocation.lat, userLocation.lng],
+      [target.lat, target.lng]
+    );
+
+    // Dynamic padding: top leaves room for status bar (130px), bottom leaves room for BottomSheet (320px or 110px)
+    map.fitBounds(bounds, {
+      paddingTopLeft: [50, 135],
+      paddingBottomRight: [50, isCollapsed ? 115 : 325],
+      maxZoom: 17,
+      animate: animated,
+      duration: 0.5,
+    });
+  };
+
+  // Update recommendation markers with interactive callouts
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map) return;
 
-    // Clear previous markers
     markersRef.current.forEach((m) => m.remove());
     markersRef.current = [];
 
     if (recommendations.length === 0) return;
 
-    const bounds = L.latLngBounds(
-      [userLocation.lat, userLocation.lng],
-      [userLocation.lat, userLocation.lng]
-    );
-
     recommendations.forEach((rec, idx) => {
       const isSelected = idx === selectedIndex;
       const markerHtml = `
-        <div class="custom-tteum-marker ${isSelected ? "selected" : ""}" style="cursor: pointer;">
+        <div class="custom-tteum-marker ${isSelected ? "selected" : ""}" style="cursor: pointer; position: relative;">
+          ${
+            isSelected
+              ? `<div class="marker-callout">
+                  <span>${rec.place.name}</span>
+                  <span class="callout-time">도보 ${rec.timeline.outboundMinutes}분</span>
+                </div>`
+              : ""
+          }
           <div class="marker-pin" style="
             background: ${isSelected ? "var(--color-coral)" : "var(--color-ink)"};
             transform: ${isSelected ? "scale(1.18)" : "scale(1)"};
@@ -109,41 +134,93 @@ export default function MapView({
         iconAnchor: [16, 16],
       });
 
-      const marker = L.marker([rec.place.lat, rec.place.lng], { icon })
+      const marker = L.marker([rec.place.lat, rec.place.lng], {
+        icon,
+        zIndexOffset: isSelected ? 600 : 200,
+      })
         .addTo(map)
         .on("click", () => {
           onSelectIndex(idx);
         });
 
-      bounds.extend([rec.place.lat, rec.place.lng]);
       markersRef.current.push(marker);
     });
+  }, [recommendations, selectedIndex, onSelectIndex]);
 
-    // Center to bounds with padding for bottom sheet
-    map.fitBounds(bounds, {
-      paddingTopLeft: [40, 40],
-      paddingBottomRight: [40, 240], // leave room for recommendation card
-      maxZoom: 16,
-    });
-  }, [recommendations, selectedIndex, onSelectIndex, userLocation]);
-
-  // Pan to selected item
+  // Update walking polyline & re-frame view when selected destination or collapse changes
   useEffect(() => {
     const map = mapInstanceRef.current;
     if (!map || !recommendations[selectedIndex]) return;
 
     const target = recommendations[selectedIndex].place;
-    map.panTo([target.lat, target.lng], { animate: true, duration: 0.5 });
-  }, [selectedIndex, recommendations]);
+
+    // Draw dashed walking polyline
+    if (walkingRouteRef.current) {
+      walkingRouteRef.current.remove();
+    }
+
+    walkingRouteRef.current = L.polyline(
+      [
+        [userLocation.lat, userLocation.lng],
+        [target.lat, target.lng],
+      ],
+      {
+        color: "#E46F5D",
+        weight: 3.5,
+        dashArray: "6, 8",
+        opacity: 0.85,
+        lineCap: "round",
+      }
+    ).addTo(map);
+
+    frameSelectedRoute(true);
+  }, [selectedIndex, isCollapsed, userLocation, recommendations]);
 
   return (
     <div
-      ref={mapContainerRef}
       style={{
         width: "100%",
         height: "100%",
         position: "relative",
       }}
-    />
+    >
+      <div
+        ref={mapContainerRef}
+        style={{
+          width: "100%",
+          height: "100%",
+        }}
+      />
+
+      {/* Floating Recenter Route Button */}
+      <button
+        type="button"
+        onClick={() => frameSelectedRoute(true)}
+        title="경로 재정렬"
+        aria-label="경로 재정렬"
+        style={{
+          position: "absolute",
+          right: "16px",
+          bottom: isCollapsed ? "105px" : "315px",
+          zIndex: 25,
+          width: "42px",
+          height: "42px",
+          borderRadius: "50%",
+          backgroundColor: "rgba(250, 248, 243, 0.96)",
+          backdropFilter: "blur(8px)",
+          WebkitBackdropFilter: "blur(8px)",
+          border: "1px solid rgba(32, 37, 34, 0.12)",
+          boxShadow: "0 4px 14px rgba(32, 37, 34, 0.15)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          cursor: "pointer",
+          transition: "bottom 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.15s ease",
+          color: "var(--color-ink)",
+        }}
+      >
+        <Navigation size={18} />
+      </button>
+    </div>
   );
 }
