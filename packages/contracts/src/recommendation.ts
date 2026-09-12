@@ -46,6 +46,32 @@ export const TimelineSchema = z.object({
 });
 export type Timeline = z.infer<typeof TimelineSchema>;
 
+export const NearbyCafeSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  category: z.string(), // "독립 로스터리" | "전통 찻집" | "북카페 & 쉼터" | "동네 디저트 공방" | "로컬 에스프레소 바"
+  distanceMeters: z.number(),
+  walkingMinutes: z.number(),
+  lat: z.number(),
+  lng: z.number(),
+  address: z.string().optional(),
+  signatureMenu: z.string().optional(),
+  businessType: z.string().optional(), // "소상공인 독립점포"
+  quietScore: z.string().optional(), // "조용함" | "아늑함" | "대화하기 좋음"
+  openHours: z.string().optional(), // "09:00 ~ 21:30"
+});
+export type NearbyCafe = z.infer<typeof NearbyCafeSchema>;
+
+export const CommercialDistrictSchema = z.object({
+  districtName: z.string(), // "일원동 맛골목 골목상권"
+  districtType: z.string(), // "골목상권" | "발달상권" | "관광특구" | "주거배후상권"
+  smallBusinessRatio: z.string(), // "소상공인 비율 84%"
+  vibeTag: z.string(), // "호젓한 주거골목" | "문화예술 직장상권"
+  footTraffic: z.string().optional(), // "시간당 4,800명 유동"
+  densityMessage: z.string().optional(),
+});
+export type CommercialDistrict = z.infer<typeof CommercialDistrictSchema>;
+
 export const RecommendationItemSchema = z.object({
   id: z.string(),
   title: z.string(),
@@ -66,6 +92,8 @@ export const RecommendationItemSchema = z.object({
   sourceUpdatedAt: z.string(),
   crowdLevel: z.enum(["relaxed", "normal", "busy", "very_busy", "unknown"]),
   provenanceMessage: z.string().optional(),
+  nearbyCafes: z.array(NearbyCafeSchema).optional(),
+  commercialDistrict: CommercialDistrictSchema.optional(),
 });
 export type RecommendationItem = z.infer<typeof RecommendationItemSchema>;
 
@@ -88,6 +116,8 @@ export const CitySummarySchema = z.object({
   precipitationMessage: z.string().optional(),
   airQuality: z.string().optional(),
   capturedAt: z.string().optional(),
+  commercialDistrict: CommercialDistrictSchema.optional(),
+  totalCafesCount: z.number().optional(),
 });
 export type CitySummary = z.infer<typeof CitySummarySchema>;
 
@@ -100,3 +130,4 @@ export const RecommendationResponseSchema = z.object({
   citySummary: CitySummarySchema.optional(),
 });
 export type RecommendationResponse = z.infer<typeof RecommendationResponseSchema>;
+

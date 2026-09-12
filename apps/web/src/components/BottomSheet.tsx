@@ -1,5 +1,5 @@
 import { RecommendationItem } from "@tteum/contracts";
-import { ChevronRight, ShieldCheck, ChevronUp, ChevronDown } from "lucide-react";
+import { ChevronRight, ShieldCheck, ChevronUp, ChevronDown, Store, Coffee } from "lucide-react";
 
 interface BottomSheetProps {
   recommendations: RecommendationItem[];
@@ -44,7 +44,7 @@ export default function BottomSheet({
         bottom: 0,
         left: 0,
         right: 0,
-        padding: isCollapsed ? "8px 16px 16px" : "12px 16px 22px",
+        padding: isCollapsed ? "8px 16px 16px" : "12px 16px 20px",
         background: isCollapsed
           ? "rgba(244, 241, 233, 0.95)"
           : "linear-gradient(to top, rgba(244, 241, 233, 0.98) 85%, rgba(244, 241, 233, 0))",
@@ -157,9 +157,16 @@ export default function BottomSheet({
                   {crowd.text}
                 </span>
               </div>
-              <span className="text-caption" style={{ color: "var(--color-coral)", fontWeight: 600 }}>
-                도보 {current.timeline.outboundMinutes}분 · {current.timeline.totalMinutes}분 완결
-              </span>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "2px" }}>
+                <span className="text-caption" style={{ color: "var(--color-coral)", fontWeight: 600 }}>
+                  도보 {current.timeline.outboundMinutes}분 · {current.timeline.totalMinutes}분 완결
+                </span>
+                {current.nearbyCafes && current.nearbyCafes.length > 0 && (
+                  <span style={{ fontSize: "10px", color: "var(--color-dusk)", fontWeight: 600 }}>
+                    • ☕ 주변 카페 {current.nearbyCafes.length}곳
+                  </span>
+                )}
+              </div>
             </div>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "4px", color: "var(--color-dusk)", fontSize: "12px", fontWeight: 600 }}>
@@ -172,14 +179,16 @@ export default function BottomSheet({
         <div
           className="card-paper animate-fade-in"
           style={{
-            padding: "18px 20px 20px",
+            padding: "16px 18px 18px",
             cursor: "pointer",
             transition: "transform var(--transition-fast)",
             pointerEvents: "auto",
+            maxHeight: "75vh",
+            overflowY: "auto",
           }}
         >
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }} onClick={() => onOpenDetail(current)}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "6px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }} onClick={() => onOpenDetail(current)}>
               <span
                 style={{
                   display: "inline-flex",
@@ -199,6 +208,27 @@ export default function BottomSheet({
               <span className="text-caption" style={{ color: "var(--color-ink-muted)", fontWeight: 500 }}>
                 {current.place.areaName} · {current.place.name}
               </span>
+
+              {/* Commercial District Small Business Badge */}
+              {current.commercialDistrict && (
+                <span
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "4px",
+                    padding: "2px 7px",
+                    borderRadius: "6px",
+                    backgroundColor: "rgba(82, 103, 121, 0.08)",
+                    color: "var(--color-dusk)",
+                    fontSize: "10px",
+                    fontWeight: 600,
+                  }}
+                  title="서울시 골목상권 데이터 연계"
+                >
+                  <Store size={10} />
+                  <span>{current.commercialDistrict.districtName}</span>
+                </span>
+              )}
             </div>
 
             <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
@@ -240,6 +270,7 @@ export default function BottomSheet({
               )}
             </div>
           </div>
+
 
         {/* Title & Line */}
         <h2
@@ -391,6 +422,98 @@ export default function BottomSheet({
             </div>
           </div>
         </div>
+
+        {/* Nearby Small Business Cafes & Tea Rooms Section */}
+        {current.nearbyCafes && current.nearbyCafes.length > 0 && (
+          <div style={{ marginBottom: "14px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "7px" }}>
+              <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--color-ink-muted)", letterSpacing: "0.04em", display: "flex", alignItems: "center", gap: "4px" }}>
+                <Coffee size={12} color="var(--color-coral)" />
+                <span>주변 소상공인 로컬 카페 · 찻집</span>
+              </span>
+              <span style={{ fontSize: "10px", color: "var(--color-dusk)", fontWeight: 600 }}>
+                도보 2~5분 거리
+              </span>
+            </div>
+
+            <div
+              style={{
+                display: "flex",
+                gap: "8px",
+                overflowX: "auto",
+                paddingBottom: "2px",
+              }}
+              className="no-scrollbar"
+            >
+              {current.nearbyCafes.map((cafe) => (
+                <div
+                  key={cafe.id}
+                  style={{
+                    flex: "0 0 190px",
+                    padding: "9px 11px",
+                    borderRadius: "8px",
+                    backgroundColor: "rgba(32, 37, 34, 0.03)",
+                    border: "1px solid rgba(32, 37, 34, 0.06)",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "3px",
+                  }}
+                >
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span
+                      style={{
+                        fontSize: "12px",
+                        fontWeight: 700,
+                        color: "var(--color-ink)",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                        maxWidth: "120px",
+                      }}
+                    >
+                      {cafe.name}
+                    </span>
+                    <span
+                      style={{
+                        fontSize: "10px",
+                        fontWeight: 700,
+                        color: "var(--color-coral)",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      도보 {cafe.walkingMinutes}분
+                    </span>
+                  </div>
+
+                  <div style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "10px", color: "var(--color-ink-muted)" }}>
+                    <span style={{ fontWeight: 600, color: "var(--color-dusk)" }}>{cafe.category}</span>
+                    {cafe.quietScore && (
+                      <>
+                        <span style={{ opacity: 0.4 }}>•</span>
+                        <span style={{ color: "#445942", fontWeight: 600 }}>{cafe.quietScore}</span>
+                      </>
+                    )}
+                  </div>
+
+                  {cafe.signatureMenu && (
+                    <div
+                      style={{
+                        fontSize: "10px",
+                        color: "var(--color-ink-muted)",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                        marginTop: "1px",
+                      }}
+                    >
+                      {cafe.signatureMenu}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Action Bar with Semantic Accessible Button & Provenance */}
         <div

@@ -82,23 +82,44 @@ export default function S04RecommendationMap({
           </span>
         </div>
 
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "5px",
-            padding: "3px 9px",
-            borderRadius: "var(--radius-chip)",
-            backgroundColor: status.bg,
-            color: status.color,
-            fontSize: "11px",
-            fontWeight: 600,
-            whiteSpace: "nowrap",
-          }}
-        >
-          <span>🌤️ {tempStr}</span>
-          <span style={{ opacity: 0.5 }}>•</span>
-          <span>{status.text}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+          {citySummary?.commercialDistrict && (
+            <div
+              style={{
+                display: "none",
+                alignItems: "center",
+                gap: "4px",
+                padding: "3px 8px",
+                borderRadius: "var(--radius-chip)",
+                backgroundColor: "rgba(68, 89, 66, 0.08)",
+                color: "#445942",
+                fontSize: "10px",
+                fontWeight: 600,
+              }}
+              className="sm-inline-flex"
+            >
+              <span>🏛️ {citySummary.commercialDistrict.districtName}</span>
+            </div>
+          )}
+
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "5px",
+              padding: "3px 9px",
+              borderRadius: "var(--radius-chip)",
+              backgroundColor: status.bg,
+              color: status.color,
+              fontSize: "11px",
+              fontWeight: 600,
+              whiteSpace: "nowrap",
+            }}
+          >
+            <span>🌤️ {tempStr}</span>
+            <span style={{ opacity: 0.5 }}>•</span>
+            <span>{status.text}</span>
+          </div>
         </div>
       </div>
 

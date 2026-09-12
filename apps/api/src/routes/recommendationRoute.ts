@@ -9,6 +9,7 @@ import { evaluateCandidates } from "../domain/scoringEngine.js";
 import { getSeoulCitySnapshot } from "../adapters/seoul/seoulAdapter.js";
 import { generateEditorialNarration } from "../adapters/gemini/geminiEditor.js";
 import { sessionRepository } from "../repositories/sessionRepository.js";
+import { getNearbyCommercialAndCafes } from "../adapters/commercial/commercialAdapter.js";
 
 export const recommendationRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post("/api/recommendations", async (req, reply) => {
@@ -75,21 +76,33 @@ export const recommendationRoutes: FastifyPluginAsync = async (fastify) => {
       return emptyResponse;
     }
 
-    // 3. Gemini editorial text generation with fallback
+    // 3. Gemini editorial text generation + Small business / Cafe enrichment
+    let primaryCommercialDistrict: any = null;
     const recommendations: RecommendationItem[] = await Promise.all(
       evaluated.map(async (cand) => {
-        const narration = await generateEditorialNarration({
-          placeName: cand.place.name,
-          areaName: cand.place.areaName,
-          mood,
-          stayMinutes: cand.timeline.stayMinutes,
-          outboundMinutes: cand.timeline.outboundMinutes,
-          returnMinutes: cand.timeline.returnMinutes,
-          safetyBufferMinutes: cand.timeline.safetyBufferMinutes,
-          crowdLevel: cand.crowdLevel,
-          costWon: cand.place.estimatedCostWon,
-          facts: cand.facts,
-        });
+        const [narration, commercial] = await Promise.all([
+          generateEditorialNarration({
+            placeName: cand.place.name,
+            areaName: cand.place.areaName,
+            mood,
+            stayMinutes: cand.timeline.stayMinutes,
+            outboundMinutes: cand.timeline.outboundMinutes,
+            returnMinutes: cand.timeline.returnMinutes,
+            safetyBufferMinutes: cand.timeline.safetyBufferMinutes,
+            crowdLevel: cand.crowdLevel,
+            costWon: cand.place.estimatedCostWon,
+            facts: cand.facts,
+          }),
+          getNearbyCommercialAndCafes({
+            lat: cand.place.latitude,
+            lng: cand.place.longitude,
+            areaName: cand.place.areaName,
+          }),
+        ]);
+
+        if (!primaryCommercialDistrict) {
+          primaryCommercialDistrict = commercial.commercialDistrict;
+        }
 
         const validUntilDate = new Date(Date.now() + cand.timeline.totalMinutes * 60 * 1000);
 
@@ -117,6 +130,8 @@ export const recommendationRoutes: FastifyPluginAsync = async (fastify) => {
           sourceUpdatedAt: cand.place.verifiedAt,
           crowdLevel: cand.crowdLevel,
           provenanceMessage,
+          nearbyCafes: commercial.nearbyCafes,
+          commercialDistrict: commercial.commercialDistrict,
         };
       })
     );
@@ -141,6 +156,8 @@ export const recommendationRoutes: FastifyPluginAsync = async (fastify) => {
       precipitationMessage: latestSnapshot.weather?.precipitationMessage,
       airQuality: latestSnapshot.weather?.pm25 && latestSnapshot.weather.pm25 <= 15 ? "좋음" : "보통",
       capturedAt: latestSnapshot.capturedAt,
+      commercialDistrict: primaryCommercialDistrict || undefined,
+      totalCafesCount: recommendations.reduce((acc, r) => acc + (r.nearbyCafes?.length || 0), 0),
     } : undefined;
 
     const response: RecommendationResponse = {

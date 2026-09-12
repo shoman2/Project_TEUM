@@ -1,6 +1,7 @@
 import { FastifyPluginAsync } from "fastify";
 import { config } from "../config/env.js";
 import { getSeoulCitySnapshot } from "../adapters/seoul/seoulAdapter.js";
+import { getNearbyCommercialAndCafes } from "../adapters/commercial/commercialAdapter.js";
 
 export const seoulRoutes: FastifyPluginAsync = async (fastify) => {
   // Preset areas supported in TEUM
@@ -23,6 +24,20 @@ export const seoulRoutes: FastifyPluginAsync = async (fastify) => {
     }
 
     const result = await getSeoulCitySnapshot(decodeURIComponent(areaName));
+    return result;
+  });
+
+  // Small business commercial district & nearby cafes
+  fastify.get("/api/commercial/cafes", async (req, reply) => {
+    const { lat, lng, areaName } = req.query as { lat?: string; lng?: string; areaName?: string };
+    if (!lat || !lng) {
+      return reply.status(400).send({ message: "lat and lng are required" });
+    }
+    const result = await getNearbyCommercialAndCafes({
+      lat: parseFloat(lat),
+      lng: parseFloat(lng),
+      areaName: areaName ? decodeURIComponent(areaName) : undefined,
+    });
     return result;
   });
 

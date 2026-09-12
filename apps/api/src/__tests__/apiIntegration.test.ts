@@ -56,6 +56,26 @@ describe("API Integration Tests", () => {
     expect(first.line).toBeDefined();
     expect(first.timeline.totalMinutes).toBeLessThanOrEqual(60);
     expect(first.facts.length).toBeGreaterThanOrEqual(2);
+    expect(first.commercialDistrict).toBeDefined();
+    expect(first.commercialDistrict.districtName).toBeDefined();
+    expect(first.nearbyCafes).toBeDefined();
+    expect(first.nearbyCafes.length).toBeGreaterThan(0);
+    expect(first.nearbyCafes[0].name).toBeDefined();
+    expect(first.nearbyCafes[0].walkingMinutes).toBeGreaterThan(0);
+  });
+
+  it("GET /api/commercial/cafes should return nearby cafes for Ilwon-dong coordinates", async () => {
+    const res = await app.inject({
+      method: "GET",
+      url: "/api/commercial/cafes?lat=37.4835&lng=127.0845&areaName=강남구%20일원동",
+    });
+
+    expect(res.statusCode).toBe(200);
+    const body = JSON.parse(res.body);
+    expect(body.commercialDistrict).toBeDefined();
+    expect(body.commercialDistrict.districtName).toContain("일원동");
+    expect(body.nearbyCafes.length).toBeGreaterThan(0);
+    expect(body.nearbyCafes[0].category).toBeDefined();
   });
 
   it("POST /api/recommendations with 15min should return honest empty result", async () => {

@@ -1,7 +1,7 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import { RecommendationItem } from "@tteum/contracts";
-import { Navigation } from "lucide-react";
+import { Navigation, Coffee } from "lucide-react";
 
 interface MapViewProps {
   userLocation: { lat: number; lng: number };
@@ -21,8 +21,10 @@ export default function MapView({
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markersRef = useRef<L.Marker[]>([]);
+  const cafeMarkersRef = useRef<L.Marker[]>([]);
   const userMarkerRef = useRef<L.Marker | null>(null);
   const walkingRouteRef = useRef<L.Polyline | null>(null);
+  const [showCafes, setShowCafes] = useState(true);
 
   // Initialize map
   useEffect(() => {
@@ -85,8 +87,6 @@ export default function MapView({
       [target.lat, target.lng]
     );
 
-    // Dynamic padding: top leaves room for status bar (140px), bottom leaves room for BottomSheet (310px or 110px)
-    // Horizontal padding 80px prevents callout badges from ever being cut off at left/right edges
     map.fitBounds(bounds, {
       paddingTopLeft: [80, 140],
       paddingBottomRight: [80, isCollapsed ? 110 : 310],
@@ -181,6 +181,76 @@ export default function MapView({
     });
   }, [recommendations, selectedIndex, onSelectIndex]);
 
+  // Update nearby small business cafe pins
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    cafeMarkersRef.current.forEach((m) => m.remove());
+    cafeMarkersRef.current = [];
+
+    if (!showCafes) return;
+
+    const current = recommendations[selectedIndex];
+    if (!current || !current.nearbyCafes || current.nearbyCafes.length === 0) return;
+
+    current.nearbyCafes.forEach((cafe) => {
+      const cafeIcon = L.divIcon({
+        className: "leaflet-custom-cafe-pin",
+        html: `
+          <div style="
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #FAF8F3;
+            border: 2px solid #526779;
+            box-shadow: 0 2px 8px rgba(32, 37, 34, 0.22);
+            cursor: pointer;
+            position: relative;
+          " title="${cafe.name} (${cafe.category}, 도보 ${cafe.walkingMinutes}분)">
+            <span style="font-size: 13px; line-height: 1;">☕</span>
+            <div style="
+              position: absolute;
+              top: -5px;
+              right: -7px;
+              background: #E46F5D;
+              color: #FAF8F3;
+              font-size: 9px;
+              font-weight: 700;
+              border-radius: 6px;
+              padding: 0 3px;
+              line-height: 12px;
+              white-space: nowrap;
+              border: 1px solid #FAF8F3;
+            ">${cafe.walkingMinutes}m</div>
+          </div>
+        `,
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
+      });
+
+      const cafeMarker = L.marker([cafe.lat, cafe.lng], {
+        icon: cafeIcon,
+        zIndexOffset: 450,
+      }).addTo(map);
+
+      cafeMarker.bindPopup(`
+        <div style="font-family: inherit; font-size: 12px; color: #202522; padding: 4px; min-width: 170px;">
+          <div style="font-weight: 700; font-size: 13px; margin-bottom: 2px; color: #202522;">☕ ${cafe.name}</div>
+          <div style="color: #E46F5D; font-weight: 600; margin-bottom: 3px; font-size: 11px;">${cafe.category} · 도보 ${cafe.walkingMinutes}분 (${cafe.distanceMeters}m)</div>
+          ${cafe.signatureMenu ? `<div style="color: #526779; font-size: 11px; margin-bottom: 2px;">• ${cafe.signatureMenu}</div>` : ""}
+          ${cafe.quietScore ? `<div style="color: #445942; font-size: 10px; font-weight: 600; background: rgba(68,89,66,0.08); padding: 1px 6px; border-radius: 4px; display: inline-block;">${cafe.quietScore}</div>` : ""}
+          ${cafe.openHours ? `<div style="color: #8E998F; font-size: 10px; margin-top: 3px;">영업: ${cafe.openHours}</div>` : ""}
+        </div>
+      `, { closeButton: false, offset: [0, -14] });
+
+      cafeMarkersRef.current.push(cafeMarker);
+    });
+  }, [recommendations, selectedIndex, showCafes]);
+
   // Update walking polyline & re-frame view when selected destination or collapse changes
   useEffect(() => {
     const map = mapInstanceRef.current;
@@ -210,6 +280,8 @@ export default function MapView({
     frameSelectedRoute(true);
   }, [selectedIndex, isCollapsed, userLocation, recommendations]);
 
+  const currentCafesCount = recommendations[selectedIndex]?.nearbyCafes?.length || 0;
+
   return (
     <div
       style={{
@@ -225,6 +297,41 @@ export default function MapView({
           height: "100%",
         }}
       />
+
+      {/* Floating Cafe Pins Toggle Button */}
+      {currentCafesCount > 0 && (
+        <button
+          type="button"
+          onClick={() => setShowCafes(!showCafes)}
+          title={showCafes ? "주변 카페 핀 숨기기" : "주변 로컬 카페 핀 보기"}
+          aria-label="주변 로컬 카페 핀 토글"
+          style={{
+            position: "absolute",
+            left: "16px",
+            bottom: isCollapsed ? "105px" : "315px",
+            zIndex: 800,
+            height: "38px",
+            padding: "0 12px",
+            borderRadius: "19px",
+            backgroundColor: showCafes ? "var(--color-ink)" : "rgba(250, 248, 243, 0.96)",
+            color: showCafes ? "#FAF8F3" : "var(--color-ink)",
+            backdropFilter: "blur(8px)",
+            WebkitBackdropFilter: "blur(8px)",
+            border: "1px solid rgba(32, 37, 34, 0.12)",
+            boxShadow: "0 4px 14px rgba(32, 37, 34, 0.15)",
+            display: "flex",
+            alignItems: "center",
+            gap: "6px",
+            fontSize: "12px",
+            fontWeight: 700,
+            cursor: "pointer",
+            transition: "bottom 0.25s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease",
+          }}
+        >
+          <Coffee size={14} color={showCafes ? "#FAF8F3" : "var(--color-coral)"} />
+          <span>로컬 카페 {currentCafesCount}곳</span>
+        </button>
+      )}
 
       {/* Floating Recenter Route Button */}
       <button
@@ -258,3 +365,4 @@ export default function MapView({
     </div>
   );
 }
+
