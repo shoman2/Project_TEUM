@@ -46,15 +46,16 @@ export default function BottomSheet({
         right: 0,
         padding: isCollapsed ? "8px 16px 16px" : "12px 16px 22px",
         background: isCollapsed
-          ? "rgba(244, 241, 233, 0.92)"
+          ? "rgba(244, 241, 233, 0.95)"
           : "linear-gradient(to top, rgba(244, 241, 233, 0.98) 85%, rgba(244, 241, 233, 0))",
         backdropFilter: isCollapsed ? "blur(8px)" : undefined,
         WebkitBackdropFilter: isCollapsed ? "blur(8px)" : undefined,
-        zIndex: 30,
+        zIndex: 100,
         display: "flex",
         flexDirection: "column",
         gap: "8px",
         transition: "all 0.25s ease",
+        pointerEvents: "none",
       }}
     >
       {/* Drag Handle / Toggle Button */}
@@ -67,23 +68,24 @@ export default function BottomSheet({
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-          padding: "4px 0 6px",
+          padding: "6px 0 8px",
           cursor: "pointer",
+          pointerEvents: "auto",
         }}
       >
         <div
           style={{
-            width: "36px",
-            height: "4px",
-            borderRadius: "2px",
-            backgroundColor: "rgba(32, 37, 34, 0.2)",
+            width: "42px",
+            height: "5px",
+            borderRadius: "3px",
+            backgroundColor: "rgba(32, 37, 34, 0.35)",
           }}
         />
       </div>
 
       {/* Indicator Dots if multiple recommendations */}
       {recommendations.length > 1 && (
-        <div style={{ display: "flex", justifyContent: "center", gap: "6px", marginBottom: "2px" }}>
+        <div style={{ display: "flex", justifyContent: "center", gap: "6px", marginBottom: "2px", pointerEvents: "auto" }}>
           {recommendations.map((_, idx) => (
             <button
               key={idx}
@@ -95,6 +97,7 @@ export default function BottomSheet({
                 borderRadius: "3px",
                 backgroundColor: idx === selectedIndex ? "var(--color-ink)" : "var(--color-mist)",
                 transition: "all var(--transition-fast)",
+                cursor: "pointer",
               }}
             />
           ))}
@@ -112,6 +115,7 @@ export default function BottomSheet({
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
+            pointerEvents: "auto",
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
@@ -153,6 +157,7 @@ export default function BottomSheet({
             padding: "18px 20px 20px",
             cursor: "pointer",
             transition: "transform var(--transition-fast)",
+            pointerEvents: "auto",
           }}
         >
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>

@@ -240,6 +240,14 @@ button {
 .marker-callout .callout-time {
   color: var(--color-coral);
   font-weight: 700;
+  flex-shrink: 0;
+}
+
+.marker-callout span:first-child {
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Animations */

@@ -85,10 +85,11 @@ export default function MapView({
       [target.lat, target.lng]
     );
 
-    // Dynamic padding: top leaves room for status bar (130px), bottom leaves room for BottomSheet (320px or 110px)
+    // Dynamic padding: top leaves room for status bar (140px), bottom leaves room for BottomSheet (310px or 110px)
+    // Horizontal padding 80px prevents callout badges from ever being cut off at left/right edges
     map.fitBounds(bounds, {
-      paddingTopLeft: [50, 135],
-      paddingBottomRight: [50, isCollapsed ? 115 : 325],
+      paddingTopLeft: [80, 140],
+      paddingBottomRight: [80, isCollapsed ? 110 : 310],
       maxZoom: 17,
       animate: animated,
       duration: 0.5,
@@ -202,7 +203,7 @@ export default function MapView({
           position: "absolute",
           right: "16px",
           bottom: isCollapsed ? "105px" : "315px",
-          zIndex: 25,
+          zIndex: 800,
           width: "42px",
           height: "42px",
           borderRadius: "50%",

@@ -60,7 +60,7 @@ export default function S04RecommendationMap({
           top: "72px",
           left: "16px",
           right: "16px",
-          zIndex: 25,
+          zIndex: 100,
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
@@ -93,8 +93,8 @@ export default function S04RecommendationMap({
         </div>
       </div>
 
-      {/* Map Layer */}
-      <div style={{ flex: 1, position: "relative" }}>
+      {/* Map Layer (isolated stacking context) */}
+      <div style={{ flex: 1, position: "relative", zIndex: 1, isolation: "isolate" }}>
         <MapView
           userLocation={userLocation}
           recommendations={recommendations}
