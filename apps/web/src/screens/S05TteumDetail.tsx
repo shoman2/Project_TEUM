@@ -199,6 +199,34 @@ export default function S05TteumDetail({ item, onBack, onStartSession }: S05Tteu
                   {item.timeline.safetyBufferMinutes}분
                 </div>
               </div>
+
+              {item.timeline.remainingBufferMinutes && item.timeline.remainingBufferMinutes > 0 ? (
+                <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                  <div
+                    style={{
+                      width: "32px",
+                      height: "32px",
+                      borderRadius: "50%",
+                      backgroundColor: "rgba(82, 103, 121, 0.12)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      color: "var(--color-dusk)",
+                    }}
+                  >
+                    <Clock size={16} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div className="text-meta" style={{ fontWeight: 600 }}>
+                      다음 일정 사전 복귀 여유
+                    </div>
+                    <div className="text-caption">가용 틈새 시간 중 남은 사전 여유 버퍼</div>
+                  </div>
+                  <div className="text-meta" style={{ fontWeight: 700, color: "var(--color-dusk)" }}>
+                    +{item.timeline.remainingBufferMinutes}분
+                  </div>
+                </div>
+              ) : null}
             </div>
           </div>
 
@@ -231,8 +259,8 @@ export default function S05TteumDetail({ item, onBack, onStartSession }: S05Tteu
           </div>
 
           <div style={{ textAlign: "center", marginBottom: "16px" }}>
-            <span className="text-caption" style={{ color: "var(--color-ink-muted)" }}>
-              데이터 기준: {item.sourceUpdatedAt.substring(11, 16)} 갱신 완료
+            <span className="text-caption" style={{ color: "var(--color-ink-muted)", fontSize: "12px" }}>
+              {item.provenanceMessage || `데이터 기준: ${item.sourceUpdatedAt.substring(11, 16)} 서울시 실시간 인구데이터 반영`}
             </span>
           </div>
         </div>

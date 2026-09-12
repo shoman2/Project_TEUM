@@ -55,7 +55,8 @@ export function computeTimeline(
   placeLoc: Location,
   destinationLoc: Location | null,
   gapMinutes: number,
-  idealStayMinutes: number
+  idealStayMinutes: number,
+  maxStayMinutes?: number
 ): { timeline: Timeline; availableStayMinutes: number } {
   const outboundMinutes = estimateWalkingMinutes(startLoc, placeLoc);
   const returnLoc = destinationLoc || startLoc;
@@ -65,9 +66,11 @@ export function computeTimeline(
   const availableStayMinutes =
     gapMinutes - outboundMinutes - returnMinutes - safetyBufferMinutes;
 
-  // Actual planned stay within the gap
-  const stayMinutes = Math.max(0, Math.min(idealStayMinutes, availableStayMinutes));
+  // Actual planned stay: expand up to maxStayMinutes when available
+  const maxAllowedStay = maxStayMinutes || idealStayMinutes;
+  const stayMinutes = Math.max(0, Math.min(maxAllowedStay, availableStayMinutes));
   const totalMinutes = outboundMinutes + stayMinutes + returnMinutes + safetyBufferMinutes;
+  const remainingBufferMinutes = Math.max(0, gapMinutes - totalMinutes);
 
   return {
     timeline: {
@@ -76,6 +79,7 @@ export function computeTimeline(
       returnMinutes,
       safetyBufferMinutes,
       totalMinutes,
+      remainingBufferMinutes,
     },
     availableStayMinutes,
   };

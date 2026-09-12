@@ -47,17 +47,21 @@ export function evaluateCandidates(
     // 2. Hard Filter: Budget check
     if (place.estimatedCostWon > context.budgetWon) continue;
 
-    // 3. Hard Filter: Operational hours check
+    // 3. Hard Filter: Operational hours & Night Safety check
     if (place.openTime && place.closeTime) {
       const [openH, openM] = place.openTime.split(":").map(Number);
       const [closeH, closeM] = place.closeTime.split(":").map(Number);
       const openTotal = openH * 60 + openM;
       let closeTotal = closeH * 60 + closeM;
-      if (closeTotal === 0) closeTotal = 24 * 60; // 24:00
+      if (closeTotal === 0 || closeTotal <= openTotal) closeTotal = 24 * 60; // 24:00
 
-      // If already closed or will close before estimated arrival + minStay
-      const estArrival = currentTotalMinutes + 15; // rough outbound buffer
-      if (currentTotalMinutes < openTotal || estArrival + place.minStayMinutes > closeTotal) {
+      // If already past closing time
+      if (currentTotalMinutes < openTotal || currentTotalMinutes >= closeTotal) {
+        continue;
+      }
+
+      // Night safety check: if after 21:00 and place is not night safe (e.g. unlit trails, closed heritage)
+      if (currentTotalMinutes >= 21 * 60 && place.nightSafe === false) {
         continue;
       }
     }
@@ -72,19 +76,32 @@ export function evaluateCandidates(
       { lat: place.latitude, lng: place.longitude },
       context.destination,
       context.gapMinutes,
-      place.idealStayMinutes
+      place.idealStayMinutes,
+      place.maxStayMinutes
     );
 
     if (availableStayMinutes < place.minStayMinutes) {
       continue; // Not enough time to experience properly
     }
 
+    // Double check that arrival + minStay does not exceed closing time
+    if (place.openTime && place.closeTime) {
+      const [closeH, closeM] = place.closeTime.split(":").map(Number);
+      let closeTotal = closeH * 60 + closeM;
+      if (closeTotal === 0) closeTotal = 24 * 60;
+      if (currentTotalMinutes + timeline.outboundMinutes + place.minStayMinutes > closeTotal) {
+        continue;
+      }
+    }
+
     // Scoring weights:
     // score = 0.30*contextFit + 0.25*feasibility + 0.20*comfort + 0.15*novelty + 0.10*budgetFit
     const contextFit = place.moods.includes(context.mood) ? 1.0 : 0.45;
 
-    // Feasibility: how close available stay is to ideal stay
-    const feasibility = Math.min(1.0, availableStayMinutes / place.idealStayMinutes);
+    // Feasibility & Gap Utilization: reward experiences that fulfill the requested gap time faithfully
+    const stayRatio = Math.min(1.0, timeline.stayMinutes / place.idealStayMinutes);
+    const gapUtilization = Math.min(1.0, timeline.totalMinutes / context.gapMinutes);
+    const feasibility = 0.5 * stayRatio + 0.5 * gapUtilization;
 
     // Comfort: crowd factor
     const comfort = crowdLevel === "relaxed" ? 1.0 : crowdLevel === "normal" ? 0.7 : 0.35;

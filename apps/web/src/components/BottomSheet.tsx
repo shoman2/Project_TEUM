@@ -1,5 +1,5 @@
 import { RecommendationItem } from "@tteum/contracts";
-import { ChevronRight, ShieldCheck, Footprints, Clock, ChevronUp, ChevronDown } from "lucide-react";
+import { ChevronRight, ShieldCheck, ChevronUp, ChevronDown } from "lucide-react";
 
 interface BottomSheetProps {
   recommendations: RecommendationItem[];
@@ -266,52 +266,172 @@ export default function BottomSheet({
           {current.line}
         </p>
 
-        {/* Timeline bar snapshot */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "10px 14px",
-            backgroundColor: "var(--color-ivory)",
-            borderRadius: "12px",
-            marginBottom: "14px",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: "6px" }} className="text-meta">
-            <Footprints size={14} color="var(--color-dusk)" />
-            <span>도보 {current.timeline.outboundMinutes}분</span>
+        {/* Visual Connected Timeline Stepper Bar */}
+        <div style={{ marginBottom: "16px" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "7px" }}>
+            <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--color-ink-muted)", letterSpacing: "0.04em" }}>
+              시간의 설계 (TIMELINE)
+            </span>
+            <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+              <span style={{ fontSize: "12px", fontWeight: 700, color: "var(--color-ink)" }}>
+                총 {current.timeline.totalMinutes}분 완결
+              </span>
+              {current.timeline.remainingBufferMinutes && current.timeline.remainingBufferMinutes > 0 ? (
+                <span
+                  style={{
+                    fontSize: "11px",
+                    fontWeight: 700,
+                    padding: "2px 7px",
+                    borderRadius: "6px",
+                    backgroundColor: "rgba(82, 103, 121, 0.12)",
+                    color: "var(--color-dusk)",
+                  }}
+                  title="지정하신 틈새 시간 중 남은 사전 여유 버퍼"
+                >
+                  +{current.timeline.remainingBufferMinutes}분 복귀 여유
+                </span>
+              ) : null}
+            </div>
           </div>
-          <span style={{ color: "var(--color-mist)" }}>•</span>
-          <div style={{ display: "flex", alignItems: "center", gap: "6px" }} className="text-meta">
-            <Clock size={14} color="var(--color-coral)" />
-            <span style={{ fontWeight: 600 }}>체류 {current.timeline.stayMinutes}분</span>
-          </div>
-          <span style={{ color: "var(--color-mist)" }}>•</span>
-          <div style={{ display: "flex", alignItems: "center", gap: "6px" }} className="text-meta">
-            <ShieldCheck size={14} color="var(--color-sage)" />
-            <span>여유 {current.timeline.safetyBufferMinutes}분</span>
+
+          {/* Connected Time Ribbon */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: `${Math.max(1, current.timeline.outboundMinutes)}fr ${Math.max(2, current.timeline.stayMinutes)}fr ${Math.max(1, current.timeline.returnMinutes)}fr ${Math.max(1, current.timeline.safetyBufferMinutes)}fr`,
+              gap: "3px",
+              height: "30px",
+              borderRadius: "8px",
+              overflow: "hidden",
+              backgroundColor: "rgba(32, 37, 34, 0.04)",
+              padding: "2px",
+            }}
+          >
+            {/* Outbound */}
+            <div
+              title={`출발 도보: ${current.timeline.outboundMinutes}분`}
+              style={{
+                backgroundColor: "rgba(82, 103, 121, 0.15)",
+                color: "var(--color-dusk)",
+                borderRadius: "6px 0 0 6px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "11px",
+                fontWeight: 600,
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                padding: "0 4px",
+              }}
+            >
+              도보 {current.timeline.outboundMinutes}m
+            </div>
+
+            {/* Stay */}
+            <div
+              title={`현장 체류: ${current.timeline.stayMinutes}분`}
+              style={{
+                backgroundColor: "var(--color-coral)",
+                color: "#FAF8F3",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "11px",
+                fontWeight: 700,
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                padding: "0 4px",
+                boxShadow: "0 1px 4px rgba(228, 111, 93, 0.35)",
+              }}
+            >
+              체류 {current.timeline.stayMinutes}m
+            </div>
+
+            {/* Return */}
+            <div
+              title={`복귀 도보: ${current.timeline.returnMinutes}분`}
+              style={{
+                backgroundColor: "rgba(82, 103, 121, 0.15)",
+                color: "var(--color-dusk)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "11px",
+                fontWeight: 600,
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                padding: "0 4px",
+              }}
+            >
+              복귀 {current.timeline.returnMinutes}m
+            </div>
+
+            {/* Safety Buffer */}
+            <div
+              title={`안전 여유 버퍼: ${current.timeline.safetyBufferMinutes}분`}
+              style={{
+                backgroundColor: "rgba(91, 140, 81, 0.2)",
+                color: "#445942",
+                borderRadius: "0 6px 6px 0",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "11px",
+                fontWeight: 700,
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                padding: "0 4px",
+              }}
+            >
+              여유 {current.timeline.safetyBufferMinutes}m
+            </div>
           </div>
         </div>
 
-        {/* Action cue */}
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span className="text-caption" style={{ color: "var(--color-ink-muted)" }}>
-            총 {current.timeline.totalMinutes}분 안에 완결
-          </span>
-          <div
+        {/* Action Bar with Semantic Accessible Button & Provenance */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            paddingTop: "10px",
+            borderTop: "1px solid rgba(32, 37, 34, 0.06)",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "5px" }}>
+            <ShieldCheck size={13} color="#445942" />
+            <span style={{ fontSize: "11px", color: "var(--color-ink-muted)", fontWeight: 500 }}>
+              {current.provenanceMessage || "서울시 실시간 인구데이터 기준 (혼잡도: 여유)"}
+            </span>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => onOpenDetail(current)}
+            aria-label={`${current.place.name} 틈 시작하기`}
             style={{
               display: "flex",
               alignItems: "center",
-              gap: "4px",
-              color: "var(--color-coral)",
+              gap: "6px",
+              padding: "8px 15px",
+              borderRadius: "var(--radius-button)",
+              backgroundColor: "var(--color-coral)",
+              color: "#FAF8F3",
               fontSize: "13px",
-              fontWeight: 600,
+              fontWeight: 700,
+              border: "none",
+              cursor: "pointer",
+              boxShadow: "0 2px 8px rgba(228, 111, 93, 0.35)",
+              transition: "transform 0.15s ease",
             }}
           >
             <span>이 틈 시작하기</span>
-            <ChevronRight size={16} />
-          </div>
+            <ChevronRight size={15} />
+          </button>
         </div>
       </div>
       )}

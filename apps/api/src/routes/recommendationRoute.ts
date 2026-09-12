@@ -93,6 +93,10 @@ export const recommendationRoutes: FastifyPluginAsync = async (fastify) => {
 
         const validUntilDate = new Date(Date.now() + cand.timeline.totalMinutes * 60 * 1000);
 
+        const timeStr = currentDate.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit", hour12: false });
+        const crowdStr = cand.crowdLevel === "relaxed" ? "혼잡도 여유" : cand.crowdLevel === "normal" ? "혼잡도 보통" : "약간 붐빔";
+        const provenanceMessage = `${timeStr} 기준 서울시 실시간 인구데이터 반영 (${crowdStr})`;
+
         return {
           id: cand.place.id,
           title: narration.title,
@@ -112,6 +116,7 @@ export const recommendationRoutes: FastifyPluginAsync = async (fastify) => {
           score: cand.score,
           sourceUpdatedAt: cand.place.verifiedAt,
           crowdLevel: cand.crowdLevel,
+          provenanceMessage,
         };
       })
     );

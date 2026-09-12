@@ -123,7 +123,7 @@ export default function MapView({
       const crowd = getCrowdBadge(rec.crowdLevel);
 
       const markerHtml = `
-        <div class="custom-tteum-marker ${isSelected ? "selected" : ""}" style="cursor: pointer; position: relative;">
+        <div class="custom-tteum-marker ${isSelected ? "selected" : ""}" role="button" tabindex="0" aria-label="추천 ${idx + 1}번: ${rec.place.name}, 도보 ${rec.timeline.outboundMinutes}분, 서울시 실시간 혼잡도 ${crowd.label}" style="cursor: pointer; position: relative;">
           ${
             isSelected
               ? `<div class="marker-callout">
@@ -170,6 +170,7 @@ export default function MapView({
       const marker = L.marker([rec.place.lat, rec.place.lng], {
         icon,
         zIndexOffset: isSelected ? 600 : 200,
+        title: `${idx + 1}번 ${rec.place.name} (도보 ${rec.timeline.outboundMinutes}분)`,
       })
         .addTo(map)
         .on("click", () => {
@@ -229,8 +230,8 @@ export default function MapView({
       <button
         type="button"
         onClick={() => frameSelectedRoute(true)}
-        title="경로 재정렬"
-        aria-label="경로 재정렬"
+        title="내 위치 및 추천 경로 전체 보기"
+        aria-label="내 위치 및 추천 경로 전체 보기"
         style={{
           position: "absolute",
           right: "16px",

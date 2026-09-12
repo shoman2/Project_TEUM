@@ -32,6 +32,7 @@ export const PlaceSeedSchema = z.object({
     toilet: z.boolean().optional(),
     seating: z.boolean().optional(),
   }).optional(),
+  nightSafe: z.boolean().optional(),
 });
 export type PlaceSeed = z.infer<typeof PlaceSeedSchema>;
 
@@ -41,6 +42,7 @@ export const TimelineSchema = z.object({
   returnMinutes: z.number(),
   safetyBufferMinutes: z.number(),
   totalMinutes: z.number(),
+  remainingBufferMinutes: z.number().optional(),
 });
 export type Timeline = z.infer<typeof TimelineSchema>;
 
@@ -63,6 +65,7 @@ export const RecommendationItemSchema = z.object({
   score: z.number(),
   sourceUpdatedAt: z.string(),
   crowdLevel: z.enum(["relaxed", "normal", "busy", "very_busy", "unknown"]),
+  provenanceMessage: z.string().optional(),
 });
 export type RecommendationItem = z.infer<typeof RecommendationItemSchema>;
 

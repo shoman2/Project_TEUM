@@ -142,14 +142,71 @@ describe("Scoring & Hard Filter Tests", () => {
 
 describe("Gemini Template Fallback Test", () => {
   it("should produce editorial fallback matching specifications", () => {
-    const narration = getTemplateNarration(30, "empty", "정동", [
+    const narration = getTemplateNarration("정동전망대", 30, "empty", "정동", [
       "혼잡도 여유",
       "비용 0원",
     ]);
 
     expect(narration.title).toContain("30분");
-    expect(narration.title).toContain("비움");
+    expect(narration.title).toContain("정동전망대");
     expect(narration.line).toContain("정동");
     expect(narration.reasons.length).toBe(2);
+  });
+
+  it("should strictly reject closed places like Hwangudan at 21:50", () => {
+    const nightDate = new Date("2026-09-12T21:50:00+09:00");
+    const candidates = [
+      {
+        id: "hwangudan-test",
+        name: "환구단과 석고",
+        areaName: "소공동",
+        latitude: 37.5650,
+        longitude: 126.9798,
+        type: "walk" as const,
+        moods: ["empty" as const],
+        indoor: false,
+        minStayMinutes: 10,
+        idealStayMinutes: 20,
+        maxStayMinutes: 35,
+        estimatedCostWon: 0,
+        openTime: "09:00",
+        closeTime: "21:00",
+        nightSafe: false,
+        verifiedAt: "2026-09-12",
+      },
+      {
+        id: "deoksu-test",
+        name: "덕수궁 돌담길",
+        areaName: "시청",
+        latitude: 37.5658,
+        longitude: 126.9752,
+        type: "walk" as const,
+        moods: ["empty" as const],
+        indoor: false,
+        minStayMinutes: 15,
+        idealStayMinutes: 25,
+        maxStayMinutes: 45,
+        estimatedCostWon: 0,
+        openTime: "00:00",
+        closeTime: "24:00",
+        nightSafe: true,
+        verifiedAt: "2026-09-12",
+      },
+    ];
+
+    const results = evaluateCandidates(candidates, {
+      userLocation: { lat: 37.5663, lng: 126.9779 },
+      destination: null,
+      gapMinutes: 60,
+      mood: "empty",
+      budgetWon: 10000,
+      now: nightDate,
+      crowdMap: { 소공동: "relaxed", 시청: "relaxed" },
+      isStaleData: false,
+    });
+
+    const placeIds = results.map((r) => r.place.id);
+    expect(placeIds).not.toContain("hwangudan-test");
+    expect(placeIds).toContain("deoksu-test");
   });
 });

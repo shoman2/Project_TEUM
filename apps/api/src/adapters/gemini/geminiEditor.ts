@@ -21,15 +21,27 @@ const MOOD_LABELS: Record<string, string> = {
  * Deterministic fallback template (Handoff section 19)
  */
 export function getTemplateNarration(
+  placeName: string,
   stayMinutes: number,
   mood: string,
   areaName: string,
   facts: string[]
 ): NarrationOutput {
-  const moodLabel = MOOD_LABELS[mood] || "호젓한 틈";
+  const currentHour = new Date().getHours();
+  let timeContext = "도심 속 조용한 시간";
+  if (currentHour >= 20 || currentHour < 6) {
+    timeContext = "인적이 잦아든 밤";
+  } else if (currentHour >= 18) {
+    timeContext = "퇴근길 불빛 아래";
+  } else if (currentHour >= 12 && currentHour <= 14) {
+    timeContext = "한낮의 분주함을 피해";
+  } else if (currentHour < 10) {
+    timeContext = "차분한 아침 공기 속";
+  }
+
   return {
-    title: `${stayMinutes}분의 ${moodLabel}`,
-    line: `${areaName}에서 서두르지 않고 지금 온전히 완결되는 짧은 시간입니다.`,
+    title: `${timeContext}, ${placeName} ${stayMinutes}분`,
+    line: `${areaName}에서 서두르지 않고 온전히 나에게 집중하는 ${stayMinutes}분의 완결된 틈입니다.`,
     reasons: facts.slice(0, 3),
   };
 }
@@ -70,6 +82,7 @@ export async function generateEditorialNarration(params: {
   facts: string[];
 }): Promise<NarrationOutput> {
   const fallback = getTemplateNarration(
+    params.placeName,
     params.stayMinutes,
     params.mood,
     params.areaName,
@@ -92,13 +105,15 @@ export async function generateEditorialNarration(params: {
 장소, 행사, 시간, 가격, 거리, 혼잡도, 날씨를 추측하거나 추가하지 않는다.
 사실이 부족하면 과장하지 않고 중립적으로 쓴다.
 
-문체는 조용하고 도시적이며 짧다.
+문체는 조용하고 도시적이며 군더더기 없다.
 관광 광고, 감탄사, 과도한 형용사, '힐링', '핫플', '인생샷', '완벽한'을 절대 사용하지 않는다.
-장소명보다 사용자가 얻게 될 시간의 성격을 제목으로 쓴다 (예: '27분의 고요', '비를 피하는 38분').
+'20분의 호젓한 산책'과 같은 막연한 감성 카피는 절대 금지한다.
+반드시 "왜 지금 이 장소여야 하는가(시간대/도심 상황 맥락)"와 장소의 본질이 제목에 느껴지도록 작성하라.
+예: '불 꺼진 빌딩 숲 사이, 환구단 앞 20분의 고요', '정오의 북적임을 피해 걷는, 덕수궁 돌담길 25분', '퇴근길 도심 속 숨 고르기, 일원목련공원 35분의 틈'
 
 반드시 아래 JSON 포맷으로만 응답하라:
 {
-  "title": "24자 이내의 경험 제목",
+  "title": "24자 이내의 시간과 장소의 필연성이 담긴 제목",
   "line": "80자 이내의 조용한 한 문장 소개",
   "reasons": ["2~3개의 사실 기반 추천 이유"]
 }`;
