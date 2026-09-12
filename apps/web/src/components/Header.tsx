@@ -1,4 +1,4 @@
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ChevronDown, MapPin } from "lucide-react";
 import Logo from "./Logo.js";
 
 interface HeaderProps {
@@ -6,9 +6,18 @@ interface HeaderProps {
   areaLabel?: string;
   timeLabel?: string;
   showLogo?: boolean;
+  onLocationClick?: () => void;
+  isLocating?: boolean;
 }
 
-export default function Header({ onBack, areaLabel, timeLabel, showLogo = true }: HeaderProps) {
+export default function Header({
+  onBack,
+  areaLabel,
+  timeLabel,
+  showLogo = true,
+  onLocationClick,
+  isLocating = false,
+}: HeaderProps) {
   return (
     <header
       style={{
@@ -45,14 +54,55 @@ export default function Header({ onBack, areaLabel, timeLabel, showLogo = true }
         ) : null}
 
         {areaLabel && (
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <span className="text-caption" style={{ color: "var(--color-ink-muted)" }}>
-              현재 위치
+          <button
+            onClick={onLocationClick}
+            type="button"
+            disabled={!onLocationClick}
+            title={onLocationClick ? "위치 변경 또는 재탐색" : undefined}
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              background: "none",
+              border: "none",
+              padding: "2px 6px",
+              margin: "-2px -6px",
+              borderRadius: "6px",
+              cursor: onLocationClick ? "pointer" : "default",
+              textAlign: "left",
+              transition: "background-color 0.15s ease",
+            }}
+          >
+            <span
+              className="text-caption"
+              style={{
+                color: "var(--color-ink-muted)",
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+              }}
+            >
+              <MapPin size={11} style={{ color: "var(--color-coral)" }} />
+              <span>현재 위치</span>
+              {isLocating && (
+                <span style={{ fontSize: "10px", color: "var(--color-coral)", fontWeight: 600 }}>
+                  · 탐색 중...
+                </span>
+              )}
             </span>
-            <span className="text-meta" style={{ fontWeight: 600, color: "var(--color-ink)" }}>
+            <span
+              className="text-meta"
+              style={{
+                fontWeight: 600,
+                color: "var(--color-ink)",
+                display: "flex",
+                alignItems: "center",
+                gap: "3px",
+              }}
+            >
               {areaLabel}
+              {onLocationClick && <ChevronDown size={13} style={{ color: "var(--color-ink-muted)", opacity: 0.7 }} />}
             </span>
-          </div>
+          </button>
         )}
       </div>
 

@@ -18,6 +18,7 @@ import {
   startSessionApi,
   completeSessionApi,
   abandonSessionApi,
+  reverseGeocodeApi,
 } from "./lib/api.js";
 import { getAnonymousId, getReclaimedMinutes, addReclaimedMinutes } from "./lib/storage.js";
 
@@ -111,26 +112,69 @@ export default function App() {
   const [actualMinutesSpent, setActualMinutesSpent] = useState<number>(45);
   const [totalSavedMinutes, setTotalSavedMinutes] = useState<number>(105);
   const [errorMessage, setErrorMessage] = useState<string>("");
+  const [isLocating, setIsLocating] = useState<boolean>(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const [previousScreen, setPreviousScreen] = useState<ScreenState>("time");
+
+  const requestLocation = (showPermissionOnError = false) => {
+    if (!("geolocation" in navigator)) {
+      setLocationError("사용 중인 브라우저가 위치 정보 기능을 지원하지 않습니다.");
+      if (showPermissionOnError) {
+        setPreviousScreen(currentScreen);
+        setCurrentScreen("permission");
+      }
+      return;
+    }
+
+    setIsLocating(true);
+    setLocationError(null);
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        setIsLocating(false);
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        setUserLocation({ lat, lng });
+        setLocationError(null);
+
+        try {
+          const geo = await reverseGeocodeApi(lat, lng);
+          if (geo?.label && geo.label !== "현재 위치") {
+            setAreaLabel(geo.label);
+          } else {
+            setAreaLabel("현재 위치");
+          }
+        } catch {
+          setAreaLabel("현재 위치");
+        }
+      },
+      (err) => {
+        setIsLocating(false);
+        let msg = "위치 정보를 가져올 수 없습니다.";
+        if (err.code === 1) {
+          msg = "브라우저 위치 권한이 차단되어 있습니다. 주소창 좌측 설정/자물쇠 아이콘에서 [위치]를 허용해 주세요.";
+        } else if (err.code === 2) {
+          msg = "현재 위치 신호(GPS/Wi-Fi)를 수신할 수 없습니다. macOS [시스템 설정 > 위치 서비스]를 확인해 주세요.";
+        } else if (err.code === 3) {
+          msg = "위치 탐색 시간이 초과되었습니다 (10초). 신호가 안정적인 곳에서 다시 시도하거나 직접 권역을 선택해 주세요.";
+        }
+        setLocationError(msg);
+        if (showPermissionOnError) {
+          setPreviousScreen(currentScreen);
+          setCurrentScreen("permission");
+        }
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 60000,
+      }
+    );
+  };
 
   useEffect(() => {
     setTotalSavedMinutes(getReclaimedMinutes());
-
-    // Try geolocation gracefully
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setUserLocation({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          });
-          setAreaLabel("현재 위치");
-        },
-        () => {
-          // Keep default Seoul City Hall without blocking
-        },
-        { timeout: 4000 }
-      );
-    }
+    requestLocation(false);
   }, []);
 
   const currentTimeStr = new Date().toLocaleTimeString("ko-KR", {
@@ -222,7 +266,12 @@ export default function App() {
   return (
     <div className="app-container">
       {currentScreen === "splash" && (
-        <S01Splash onStart={() => setCurrentScreen("time")} />
+        <S01Splash
+          onStart={() => {
+            requestLocation(false);
+            setCurrentScreen("time");
+          }}
+        />
       )}
 
       {currentScreen === "time" && (
@@ -232,6 +281,11 @@ export default function App() {
           gapMinutes={gapMinutes}
           onGapMinutesChange={setGapMinutes}
           onNext={() => setCurrentScreen("mood")}
+          onLocationClick={() => {
+            setPreviousScreen("time");
+            setCurrentScreen("permission");
+          }}
+          isLocating={isLocating}
         />
       )}
 
@@ -244,6 +298,11 @@ export default function App() {
           onMoodChange={setMood}
           onBack={() => setCurrentScreen("time")}
           onSubmit={handleFetchRecommendations}
+          onLocationClick={() => {
+            setPreviousScreen("mood");
+            setCurrentScreen("permission");
+          }}
+          isLocating={isLocating}
         />
       )}
 
@@ -298,8 +357,13 @@ export default function App() {
           onSelectArea={(area) => {
             setUserLocation({ lat: area.lat, lng: area.lng });
             setAreaLabel(area.name);
-            setCurrentScreen("time");
+            setLocationError(null);
+            setCurrentScreen(previousScreen || "time");
           }}
+          onRetryGps={() => requestLocation(true)}
+          isLocating={isLocating}
+          locationError={locationError}
+          onClose={() => setCurrentScreen(previousScreen || "time")}
         />
       )}
 

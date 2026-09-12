@@ -1,4 +1,4 @@
-import { MapPin, AlertCircle, RefreshCw } from "lucide-react";
+import { MapPin, AlertCircle, RefreshCw, Navigation, AlertTriangle, X } from "lucide-react";
 import Logo from "./Logo.js";
 
 export function LoadingView({ message = "시간의 틈을 재단하고 있습니다..." }: { message?: string }) {
@@ -91,14 +91,24 @@ export function EmptyResultView({ onReset }: { onReset: () => void }) {
 
 export function LocationPermissionView({
   onSelectArea,
+  onRetryGps,
+  isLocating = false,
+  locationError = null,
+  onClose,
 }: {
   onSelectArea: (area: { name: string; lat: number; lng: number }) => void;
+  onRetryGps?: () => void;
+  isLocating?: boolean;
+  locationError?: string | null;
+  onClose?: () => void;
 }) {
   const PRESET_AREAS = [
     { name: "서울시청·광장", lat: 37.5663, lng: 126.9779 },
     { name: "광화문·세종대로", lat: 37.5714, lng: 126.9768 },
     { name: "을지로입구·청계천", lat: 37.5668, lng: 126.983 },
-    { name: "안국동·인사동", lat: 37.5765, lng: 126.9847 },
+    { name: "안국동·북촌·인사동", lat: 37.5765, lng: 126.9847 },
+    { name: "여의도·한강공원", lat: 37.5284, lng: 126.9246 },
+    { name: "강남역·테헤란로", lat: 37.4979, lng: 127.0276 },
   ];
 
   return (
@@ -109,43 +119,149 @@ export function LocationPermissionView({
         display: "flex",
         flexDirection: "column",
         justifyContent: "space-between",
-        padding: "32px 24px",
+        padding: "28px 20px 24px",
+        backgroundColor: "var(--color-ivory)",
+        overflowY: "auto",
       }}
     >
       <div>
-        <div
-          style={{
-            width: "48px",
-            height: "48px",
-            borderRadius: "16px",
-            backgroundColor: "var(--color-paper)",
-            border: "1px solid var(--color-mist)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            marginBottom: "24px",
-            color: "var(--color-coral)",
-          }}
-        >
-          <MapPin size={24} />
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
+          <div
+            style={{
+              width: "44px",
+              height: "44px",
+              borderRadius: "14px",
+              backgroundColor: "var(--color-paper)",
+              border: "1px solid var(--color-mist)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "var(--color-coral)",
+            }}
+          >
+            <MapPin size={22} />
+          </div>
+
+          {onClose && (
+            <button
+              onClick={onClose}
+              type="button"
+              aria-label="닫기"
+              style={{
+                width: "36px",
+                height: "36px",
+                borderRadius: "50%",
+                backgroundColor: "var(--color-paper)",
+                border: "1px solid var(--color-mist)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "var(--color-ink)",
+              }}
+            >
+              <X size={18} />
+            </button>
+          )}
         </div>
 
-        <h2 className="font-serif" style={{ fontSize: "24px", lineHeight: 1.4, marginBottom: "12px" }}>
-          출발 지역을 선택해 주세요
+        <h2 className="font-serif" style={{ fontSize: "22px", lineHeight: 1.4, marginBottom: "8px", color: "var(--color-ink)" }}>
+          출발 지역 설정 및 GPS 진단
         </h2>
 
-        <p className="text-body" style={{ color: "var(--color-ink-muted)", marginBottom: "28px" }}>
-          위치 권한 없이도 원하는 권역을 기준으로 틈을 찾을 수 있습니다.
+        <p className="text-body" style={{ color: "var(--color-ink-muted)", marginBottom: "20px", fontSize: "14px" }}>
+          브라우저의 GPS 위치를 다시 가져오거나 서울 주요 권역을 직접 선택할 수 있습니다.
         </p>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+        {/* GPS Re-request button */}
+        {onRetryGps && (
+          <button
+            type="button"
+            onClick={onRetryGps}
+            disabled={isLocating}
+            style={{
+              width: "100%",
+              padding: "14px 18px",
+              borderRadius: "var(--radius-button)",
+              backgroundColor: "var(--color-ink)",
+              color: "var(--color-paper)",
+              border: "none",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "8px",
+              fontWeight: 600,
+              fontSize: "15px",
+              marginBottom: "16px",
+              cursor: isLocating ? "not-allowed" : "pointer",
+              opacity: isLocating ? 0.8 : 1,
+            }}
+          >
+            {isLocating ? (
+              <>
+                <RefreshCw size={16} className="animate-spin" />
+                <span>현재 GPS 위치 찾는 중...</span>
+              </>
+            ) : (
+              <>
+                <Navigation size={16} />
+                <span>현재 GPS 위치 다시 가져오기</span>
+              </>
+            )}
+          </button>
+        )}
+
+        {/* Diagnostic Guide when error occurred */}
+        {locationError && (
+          <div
+            style={{
+              padding: "14px 16px",
+              backgroundColor: "rgba(228, 111, 93, 0.08)",
+              border: "1px solid rgba(228, 111, 93, 0.25)",
+              borderRadius: "var(--radius-card)",
+              marginBottom: "20px",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
+              <AlertTriangle size={18} style={{ color: "var(--color-coral)", flexShrink: 0, marginTop: "2px" }} />
+              <div>
+                <p className="text-meta" style={{ fontWeight: 600, color: "var(--color-coral)", marginBottom: "4px" }}>
+                  위치 확인 안내
+                </p>
+                <p className="text-caption" style={{ color: "var(--color-ink)", lineHeight: 1.5 }}>
+                  {locationError}
+                </p>
+                <div
+                  className="text-caption"
+                  style={{
+                    color: "var(--color-ink-muted)",
+                    marginTop: "8px",
+                    lineHeight: 1.4,
+                    borderTop: "1px dashed rgba(32, 37, 34, 0.12)",
+                    paddingTop: "6px",
+                  }}
+                >
+                  💡 <strong>해결 팁:</strong> Chrome/Safari 주소창 좌측의 <strong>자물쇠/설정</strong> 아이콘을 눌러 [위치]를 <strong>허용</strong>으로 변경하거나, Mac의 <strong>[시스템 설정 &gt; 개인정보 보호 및 보안 &gt; 위치 서비스]</strong>를 켜주세요.
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div style={{ marginBottom: "8px" }}>
+          <span className="text-caption" style={{ color: "var(--color-ink-muted)", fontWeight: 600 }}>
+            또는 서울 주요 권역 직접 선택
+          </span>
+        </div>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
           {PRESET_AREAS.map((area) => (
             <button
               key={area.name}
+              type="button"
               onClick={() => onSelectArea(area)}
               style={{
                 width: "100%",
-                padding: "16px 20px",
+                padding: "14px 18px",
                 borderRadius: "var(--radius-button)",
                 backgroundColor: "var(--color-paper)",
                 border: "1px solid var(--color-mist)",
@@ -153,10 +269,11 @@ export function LocationPermissionView({
                 alignItems: "center",
                 justifyContent: "space-between",
                 textAlign: "left",
+                cursor: "pointer",
               }}
             >
-              <span style={{ fontSize: "16px", fontWeight: 600 }}>{area.name}</span>
-              <span className="text-caption" style={{ color: "var(--color-coral)" }}>
+              <span style={{ fontSize: "15px", fontWeight: 600, color: "var(--color-ink)" }}>{area.name}</span>
+              <span className="text-caption" style={{ color: "var(--color-coral)", fontWeight: 600 }}>
                 선택
               </span>
             </button>

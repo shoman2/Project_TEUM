@@ -11,6 +11,8 @@ interface S03MoodInputProps {
   onMoodChange: (mood: Mood) => void;
   onBack: () => void;
   onSubmit: () => void;
+  onLocationClick?: () => void;
+  isLocating?: boolean;
 }
 
 export default function S03MoodInput({
@@ -21,6 +23,8 @@ export default function S03MoodInput({
   onMoodChange,
   onBack,
   onSubmit,
+  onLocationClick,
+  isLocating = false,
 }: S03MoodInputProps) {
   return (
     <div
@@ -31,7 +35,13 @@ export default function S03MoodInput({
         backgroundColor: "var(--color-ivory)",
       }}
     >
-      <Header onBack={onBack} areaLabel={areaLabel} timeLabel={currentTimeStr} />
+      <Header
+        onBack={onBack}
+        areaLabel={areaLabel}
+        timeLabel={currentTimeStr}
+        onLocationClick={onLocationClick}
+        isLocating={isLocating}
+      />
 
       <main
         className="animate-fade-in"
