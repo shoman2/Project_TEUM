@@ -76,11 +76,24 @@ export const RecommendationRequestSchema = z.object({
 });
 export type RecommendationRequest = z.infer<typeof RecommendationRequestSchema>;
 
+export const CitySummarySchema = z.object({
+  areaName: z.string().optional(),
+  crowdLevel: z.enum(["relaxed", "normal", "busy", "very_busy", "unknown"]).optional(),
+  crowdMessage: z.string().optional(),
+  populationRange: z.string().optional(),
+  temperatureC: z.number().optional(),
+  precipitationMessage: z.string().optional(),
+  airQuality: z.string().optional(),
+  capturedAt: z.string().optional(),
+});
+export type CitySummary = z.infer<typeof CitySummarySchema>;
+
 export const RecommendationResponseSchema = z.object({
   requestId: z.string(),
   generatedAt: z.string(),
   dataStatus: z.enum(["live", "stale", "demo"]),
   recommendations: z.array(RecommendationItemSchema),
   message: z.string().optional(),
+  citySummary: CitySummarySchema.optional(),
 });
 export type RecommendationResponse = z.infer<typeof RecommendationResponseSchema>;

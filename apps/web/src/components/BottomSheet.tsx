@@ -25,13 +25,13 @@ export default function BottomSheet({
   const getCrowdLabel = (level: string) => {
     switch (level) {
       case "relaxed":
-        return { text: "혼잡도 여유", color: "var(--color-sage)" };
+        return { text: "혼잡도 여유", color: "#445942", dot: "#5B8C51" };
       case "normal":
-        return { text: "혼잡도 보통", color: "var(--color-dusk)" };
+        return { text: "혼잡도 보통", color: "var(--color-dusk)", dot: "#526779" };
       case "busy":
-        return { text: "약간 붐빔", color: "var(--color-coral)" };
+        return { text: "약간 붐빔", color: "var(--color-coral)", dot: "#E46F5D" };
       default:
-        return { text: "상태 안정", color: "var(--color-ink-muted)" };
+        return { text: "상태 안정", color: "var(--color-ink-muted)", dot: "#8E998F" };
     }
   };
 
@@ -136,9 +136,27 @@ export default function BottomSheet({
               {selectedIndex + 1}
             </span>
             <div>
-              <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--color-ink)", marginRight: "6px" }}>
-                {current.place.name}
-              </span>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--color-ink)" }}>
+                  {current.place.name}
+                </span>
+                <span
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "3px",
+                    padding: "1px 6px",
+                    borderRadius: "10px",
+                    backgroundColor: "rgba(32, 37, 34, 0.05)",
+                    color: crowd.color,
+                    fontSize: "10px",
+                    fontWeight: 700,
+                  }}
+                >
+                  <span style={{ width: "5px", height: "5px", borderRadius: "50%", backgroundColor: crowd.dot }}></span>
+                  {crowd.text}
+                </span>
+              </div>
               <span className="text-caption" style={{ color: "var(--color-coral)", fontWeight: 600 }}>
                 도보 {current.timeline.outboundMinutes}분 · {current.timeline.totalMinutes}분 완결
               </span>
@@ -186,15 +204,19 @@ export default function BottomSheet({
             <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
               <div
                 style={{
-                  padding: "3px 8px",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "4px",
+                  padding: "4px 9px",
                   borderRadius: "var(--radius-chip)",
                   backgroundColor: "rgba(32, 37, 34, 0.05)",
                   color: crowd.color,
                   fontSize: "11px",
-                  fontWeight: 600,
+                  fontWeight: 700,
                 }}
               >
-                {crowd.text}
+                <span style={{ width: "6px", height: "6px", borderRadius: "50%", backgroundColor: crowd.dot }}></span>
+                <span>{crowd.text}</span>
               </div>
               {onToggleCollapse && (
                 <button

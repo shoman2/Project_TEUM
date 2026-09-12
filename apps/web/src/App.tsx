@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Mood, RecommendationItem } from "@tteum/contracts";
+import { Mood, RecommendationItem, CitySummary } from "@tteum/contracts";
 import S01Splash from "./screens/S01Splash.js";
 import S02TimeInput from "./screens/S02TimeInput.js";
 import S03MoodInput from "./screens/S03MoodInput.js";
@@ -109,6 +109,7 @@ export default function App() {
   const [recommendations, setRecommendations] = useState<RecommendationItem[]>([sampleRec, sampleRec2]);
   const [selectedRecommendation, setSelectedRecommendation] = useState<RecommendationItem | null>(sampleRec);
   const [dataStatus, setDataStatus] = useState<"live" | "stale" | "demo">("live");
+  const [citySummary, setCitySummary] = useState<CitySummary | undefined>();
   const [activeSessionId, setActiveSessionId] = useState<string | null>("sess_demo");
   const [actualMinutesSpent, setActualMinutesSpent] = useState<number>(45);
   const [totalSavedMinutes, setTotalSavedMinutes] = useState<number>(105);
@@ -236,6 +237,7 @@ export default function App() {
       });
 
       setDataStatus(response.dataStatus);
+      setCitySummary(response.citySummary);
 
       if (response.recommendations.length === 0) {
         setCurrentScreen("empty");
@@ -368,6 +370,7 @@ export default function App() {
           gapMinutes={gapMinutes}
           recommendations={recommendations}
           dataStatus={dataStatus}
+          citySummary={citySummary}
           onBack={() => setCurrentScreen("mood")}
           onSelectDetail={(item) => {
             setSelectedRecommendation(item);

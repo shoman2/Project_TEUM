@@ -94,31 +94,51 @@ export async function getSeoulCitySnapshot(
     };
   }
 
-  // 2. Fetch from Seoul OpenAPI
-  const encodedArea = encodeURIComponent(areaName);
-  const url = `${config.seoul.baseUrl}/${config.seoul.apiKey}/json/${config.seoul.service}/1/5/${encodedArea}`;
+const AREA_TO_HOTSPOT: Record<string, string> = {
+  "강남구 일원동": "양재역",
+  "일원동": "양재역",
+  "수서동": "양재역",
+  "개포동": "양재역",
+  "삼성동": "강남 MICE 관광특구",
+  "시청·서소문": "서울역",
+  "서울광장·시청": "서울역",
+  "광화문·정동": "광화문·덕수궁",
+  "광화문": "광화문·덕수궁",
+  "을지로·명동": "서울역",
+  "을지로": "서울역",
+  "명동": "서울역",
+  "여의도": "여의도",
+};
 
-  let attempts = 0;
-  while (attempts < 2) {
-    attempts++;
+  // 2. Fetch from Seoul OpenAPI
+  const targetHotspot = AREA_TO_HOTSPOT[areaName] || areaName;
+  const hotspotsToTry = [targetHotspot];
+  if (areaName.includes("강남") || areaName.includes("일원") || areaName.includes("수서") || areaName.includes("개포")) {
+    if (!hotspotsToTry.includes("강남역")) hotspotsToTry.push("강남역");
+    if (!hotspotsToTry.includes("양재역")) hotspotsToTry.push("양재역");
+  } else {
+    if (!hotspotsToTry.includes("광화문·덕수궁")) hotspotsToTry.push("광화문·덕수궁");
+  }
+
+  for (const hotspot of hotspotsToTry) {
     try {
+      const encodedArea = encodeURIComponent(hotspot);
+      const url = `${config.seoul.baseUrl}/${config.seoul.apiKey}/json/${config.seoul.service}/1/5/${encodedArea}`;
       const res = await fetchWithTimeout(url, config.seoul.timeoutMs);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      if (!res.ok) continue;
       const data = await res.json();
 
-      // Check inner resultCode
       if (data?.RESULT?.CODE && data.RESULT.CODE !== "INFO-000") {
-        throw new Error(`Seoul API inner error: ${data.RESULT.CODE}`);
+        continue;
       }
 
-      const normalized = normalizeSeoulResponse(areaName, data);
-      memoryCache.set(cacheKey, { data: normalized, cachedAt: now });
-      return { snapshot: normalized, status: "live" };
-    } catch (err) {
-      if (attempts < 2) {
-        // Exponential backoff wait 500ms
-        await new Promise((resolve) => setTimeout(resolve, 500));
+      if (data?.CITYDATA) {
+        const normalized = normalizeSeoulResponse(areaName, data);
+        memoryCache.set(cacheKey, { data: normalized, cachedAt: now });
+        return { snapshot: normalized, status: "live" };
       }
+    } catch {
+      // Continue to next fallback hotspot
     }
   }
 

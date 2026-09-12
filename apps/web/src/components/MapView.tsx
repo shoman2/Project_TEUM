@@ -108,13 +108,31 @@ export default function MapView({
 
     recommendations.forEach((rec, idx) => {
       const isSelected = idx === selectedIndex;
+      const getCrowdBadge = (lvl: string) => {
+        switch (lvl) {
+          case "relaxed":
+            return { label: "여유", color: "#445942", dot: "#5B8C51" };
+          case "normal":
+            return { label: "보통", color: "var(--color-dusk)", dot: "#526779" };
+          case "busy":
+            return { label: "붐빔", color: "var(--color-coral)", dot: "#E46F5D" };
+          default:
+            return { label: "안정", color: "#445942", dot: "#5B8C51" };
+        }
+      };
+      const crowd = getCrowdBadge(rec.crowdLevel);
+
       const markerHtml = `
         <div class="custom-tteum-marker ${isSelected ? "selected" : ""}" style="cursor: pointer; position: relative;">
           ${
             isSelected
               ? `<div class="marker-callout">
-                  <span>${rec.place.name}</span>
+                  <span class="callout-name">${rec.place.name}</span>
                   <span class="callout-time">도보 ${rec.timeline.outboundMinutes}분</span>
+                  <span style="display: inline-flex; align-items: center; gap: 3px; font-weight: 700; color: ${crowd.color};">
+                    <span style="display: inline-block; width: 6px; height: 6px; border-radius: 50%; background-color: ${crowd.dot};"></span>
+                    ${crowd.label}
+                  </span>
                 </div>`
               : ""
           }
@@ -125,6 +143,20 @@ export default function MapView({
           ">
             ${idx + 1}
           </div>
+          ${
+            !isSelected
+              ? `<div style="
+                  position: absolute;
+                  bottom: -1px;
+                  right: -1px;
+                  width: 9px;
+                  height: 9px;
+                  border-radius: 50%;
+                  background-color: ${crowd.dot};
+                  border: 2px solid #FAF8F3;
+                " title="서울시 실시간 혼잡도: ${crowd.label}"></div>`
+              : ""
+          }
         </div>
       `;
 

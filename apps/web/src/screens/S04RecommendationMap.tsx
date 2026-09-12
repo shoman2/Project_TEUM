@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { RecommendationItem } from "@tteum/contracts";
+import { RecommendationItem, CitySummary } from "@tteum/contracts";
 import MapView from "../components/MapView.js";
 import BottomSheet from "../components/BottomSheet.js";
 import Header from "../components/Header.js";
@@ -11,6 +11,7 @@ interface S04RecommendationMapProps {
   gapMinutes: number;
   recommendations: RecommendationItem[];
   dataStatus: "live" | "stale" | "demo";
+  citySummary?: CitySummary;
   onBack: () => void;
   onSelectDetail: (item: RecommendationItem) => void;
 }
@@ -21,6 +22,7 @@ export default function S04RecommendationMap({
   gapMinutes,
   recommendations,
   dataStatus,
+  citySummary,
   onBack,
   onSelectDetail,
 }: S04RecommendationMapProps) {
@@ -30,7 +32,7 @@ export default function S04RecommendationMap({
   const getStatusLabel = () => {
     switch (dataStatus) {
       case "live":
-        return { text: "서울시 실시간 데이터", bg: "rgba(169, 180, 163, 0.25)", color: "#445942" };
+        return { text: "서울시 실시간", bg: "rgba(169, 180, 163, 0.25)", color: "#445942" };
       case "stale":
         return { text: "이전 데이터 유지", bg: "rgba(82, 103, 121, 0.15)", color: "var(--color-dusk)" };
       case "demo":
@@ -39,6 +41,7 @@ export default function S04RecommendationMap({
   };
 
   const status = getStatusLabel();
+  const tempStr = citySummary?.temperatureC !== undefined ? `${citySummary.temperatureC}℃` : "21℃";
 
   return (
     <div
@@ -81,15 +84,21 @@ export default function S04RecommendationMap({
 
         <div
           style={{
-            padding: "3px 8px",
+            display: "flex",
+            alignItems: "center",
+            gap: "5px",
+            padding: "3px 9px",
             borderRadius: "var(--radius-chip)",
             backgroundColor: status.bg,
             color: status.color,
             fontSize: "11px",
             fontWeight: 600,
+            whiteSpace: "nowrap",
           }}
         >
-          {status.text}
+          <span>🌤️ {tempStr}</span>
+          <span style={{ opacity: 0.5 }}>•</span>
+          <span>{status.text}</span>
         </div>
       </div>
 

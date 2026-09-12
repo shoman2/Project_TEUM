@@ -24,10 +24,11 @@ export const recommendationRoutes: FastifyPluginAsync = async (fastify) => {
     const startTime = Date.now();
     const currentDate = now ? new Date(now) : new Date();
 
-    // 1. Fetch Seoul city data for major central areas to populate crowd map
-    const targetAreas = ["서울광장·시청", "광화문", "을지로"];
+    // 1. Fetch Seoul city data for major areas including user area
+    const targetAreas = ["강남구 일원동", "수서동", "광화문·정동", "시청·서소문", "삼성동"];
     const crowdMap: Record<string, "relaxed" | "normal" | "busy" | "very_busy" | "unknown"> = {};
     let overallStatus: "live" | "stale" | "demo" = "demo";
+    let latestSnapshot: any = null;
 
     const snapshots = await Promise.allSettled(
       targetAreas.map((area) => getSeoulCitySnapshot(area))
@@ -37,6 +38,9 @@ export const recommendationRoutes: FastifyPluginAsync = async (fastify) => {
       if (res.status === "fulfilled") {
         const { snapshot, status } = res.value;
         crowdMap[snapshot.areaName] = snapshot.population.level;
+        if (!latestSnapshot || status === "live") {
+          latestSnapshot = snapshot;
+        }
         if (status === "live") overallStatus = "live";
         else if (status === "stale" && overallStatus !== "live") overallStatus = "stale";
       }
@@ -121,11 +125,25 @@ export const recommendationRoutes: FastifyPluginAsync = async (fastify) => {
       mood,
     });
 
+    const citySummary = latestSnapshot ? {
+      areaName: latestSnapshot.areaName,
+      crowdLevel: latestSnapshot.population.level,
+      crowdMessage: latestSnapshot.population.message,
+      populationRange: latestSnapshot.population.min && latestSnapshot.population.max
+        ? `${latestSnapshot.population.min.toLocaleString()} ~ ${latestSnapshot.population.max.toLocaleString()}명`
+        : undefined,
+      temperatureC: latestSnapshot.weather?.temperatureC,
+      precipitationMessage: latestSnapshot.weather?.precipitationMessage,
+      airQuality: latestSnapshot.weather?.pm25 && latestSnapshot.weather.pm25 <= 15 ? "좋음" : "보통",
+      capturedAt: latestSnapshot.capturedAt,
+    } : undefined;
+
     const response: RecommendationResponse = {
       requestId: "req_" + Math.random().toString(36).substring(2, 10),
       generatedAt: new Date().toISOString(),
       dataStatus: overallStatus,
       recommendations,
+      citySummary,
     };
 
     return response;
