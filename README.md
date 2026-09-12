@@ -75,8 +75,8 @@ SEOUL_API_BASE_URL=http://openapi.seoul.go.kr:8088
 SEOUL_CITYDATA_SERVICE=citydata
 
 # Google Gemini API (미입력 시 결정론적 템플릿 fallback 자동 활성화)
-GEMINI_API_KEY=replace_me
-GEMINI_MODEL=gemini-2.5-flash
+GEMINI_API_KEY=your_gemini_api_key
+GEMINI_MODEL=gemini-3-flash-preview
 GEMINI_ENABLED=true
 
 CACHE_CITYDATA_SECONDS=180

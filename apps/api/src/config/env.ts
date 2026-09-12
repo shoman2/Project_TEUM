@@ -29,7 +29,7 @@ export const config = {
 
   gemini: {
     apiKey: (process.env.GEMINI_API_KEY || "").trim(),
-    model: (process.env.GEMINI_MODEL || "gemini-2.5-flash").trim(),
+    model: (process.env.GEMINI_MODEL || "gemini-3-flash-preview").trim(),
     enabled: process.env.GEMINI_ENABLED !== "false",
     timeoutMs: 2500, // as per handoff section 22
   },
