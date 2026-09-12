@@ -1,10 +1,19 @@
 import Logo from "../components/Logo.js";
+import { MapPin } from "lucide-react";
 
 interface S01SplashProps {
   onStart: () => void;
+  areaLabel?: string;
+  isLocating?: boolean;
+  onLocationClick?: () => void;
 }
 
-export default function S01Splash({ onStart }: S01SplashProps) {
+export default function S01Splash({
+  onStart,
+  areaLabel,
+  isLocating = false,
+  onLocationClick,
+}: S01SplashProps) {
   return (
     <div
       className="animate-fade-in"
@@ -17,8 +26,8 @@ export default function S01Splash({ onStart }: S01SplashProps) {
         backgroundColor: "var(--color-ivory)",
       }}
     >
-      <div style={{ marginTop: "60px" }}>
-        <div style={{ marginBottom: "32px" }}>
+      <div style={{ marginTop: "48px" }}>
+        <div style={{ marginBottom: "28px" }}>
           <Logo size={44} />
         </div>
 
@@ -45,12 +54,43 @@ export default function S01Splash({ onStart }: S01SplashProps) {
             fontSize: "15px",
             lineHeight: 1.65,
             maxWidth: "300px",
+            marginBottom: "24px",
           }}
         >
           현재 위치와 남은 시간을 바탕으로
           <br />
           지금 온전히 완결되는 서울의 틈을 제안합니다.
         </p>
+
+        {/* Live Detected Location Pill */}
+        {areaLabel && (
+          <button
+            type="button"
+            onClick={onLocationClick}
+            disabled={!onLocationClick}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              padding: "7px 14px",
+              borderRadius: "20px",
+              backgroundColor: "var(--color-paper)",
+              border: "1px solid var(--color-mist)",
+              cursor: onLocationClick ? "pointer" : "default",
+              transition: "all 0.15s ease",
+            }}
+          >
+            <MapPin size={13} style={{ color: "var(--color-coral)" }} />
+            <span className="text-caption" style={{ color: "var(--color-ink)", fontWeight: 600 }}>
+              {isLocating ? "위치 찾는 중..." : `${areaLabel} 기준`}
+            </span>
+            {onLocationClick && (
+              <span className="text-caption" style={{ color: "var(--color-coral)", fontWeight: 600, marginLeft: "2px" }}>
+                변경
+              </span>
+            )}
+          </button>
+        )}
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>

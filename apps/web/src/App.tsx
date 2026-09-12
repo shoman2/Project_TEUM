@@ -19,6 +19,7 @@ import {
   completeSessionApi,
   abandonSessionApi,
   reverseGeocodeApi,
+  getIpLocationApi,
 } from "./lib/api.js";
 import { getAnonymousId, getReclaimedMinutes, addReclaimedMinutes } from "./lib/storage.js";
 
@@ -48,7 +49,7 @@ export default function App() {
     lat: 37.5663,
     lng: 126.9779,
   });
-  const [areaLabel, setAreaLabel] = useState<string>("서울시청·광화문");
+  const [areaLabel, setAreaLabel] = useState<string>("위치 확인 중...");
 
   // Recommendation & Session states
   const sampleRec: RecommendationItem = {
@@ -116,7 +117,7 @@ export default function App() {
   const [locationError, setLocationError] = useState<string | null>(null);
   const [previousScreen, setPreviousScreen] = useState<ScreenState>("time");
 
-  const requestLocation = (showPermissionOnError = false) => {
+  const requestLocation = async (showPermissionOnError = false) => {
     if (!("geolocation" in navigator)) {
       setLocationError("사용 중인 브라우저가 위치 정보 기능을 지원하지 않습니다.");
       if (showPermissionOnError) {
@@ -128,6 +129,25 @@ export default function App() {
 
     setIsLocating(true);
     setLocationError(null);
+
+    // Check permission state in advance if supported
+    try {
+      if (navigator.permissions && navigator.permissions.query) {
+        const perm = await navigator.permissions.query({ name: "geolocation" });
+        if (perm.state === "denied") {
+          setIsLocating(false);
+          const msg = "브라우저 위치 권한이 '차단'되어 있습니다. 브라우저 주소창 좌측의 설정/자물쇠 아이콘에서 위치를 '허용'해 주세요.";
+          setLocationError(msg);
+          if (showPermissionOnError) {
+            setPreviousScreen(currentScreen);
+            setCurrentScreen("permission");
+          }
+          return;
+        }
+      }
+    } catch {
+      // Ignore if permissions API unsupported
+    }
 
     navigator.geolocation.getCurrentPosition(
       async (position) => {
@@ -159,6 +179,9 @@ export default function App() {
           msg = "위치 탐색 시간이 초과되었습니다 (10초). 신호가 안정적인 곳에서 다시 시도하거나 직접 권역을 선택해 주세요.";
         }
         setLocationError(msg);
+        // Fallback default label if still showing loading
+        setAreaLabel((prev) => (prev === "위치 확인 중..." ? "서울시청·광화문" : prev));
+
         if (showPermissionOnError) {
           setPreviousScreen(currentScreen);
           setCurrentScreen("permission");
@@ -174,6 +197,25 @@ export default function App() {
 
   useEffect(() => {
     setTotalSavedMinutes(getReclaimedMinutes());
+
+    // 1. Instant IP-based location resolution (helpful on Vercel edge)
+    getIpLocationApi().then(async (ipData) => {
+      if (ipData && ipData.lat && ipData.lng) {
+        setUserLocation((prev) =>
+          prev.lat === 37.5663 && prev.lng === 126.9779 ? { lat: ipData.lat, lng: ipData.lng } : prev
+        );
+        try {
+          const rev = await reverseGeocodeApi(ipData.lat, ipData.lng);
+          if (rev?.label && rev.label !== "현재 위치") {
+            setAreaLabel((prev) => (prev === "위치 확인 중..." ? rev.label : prev));
+          }
+        } catch {
+          // Keep current
+        }
+      }
+    });
+
+    // 2. High-precision GPS triangulation
     requestLocation(false);
   }, []);
 
@@ -269,7 +311,18 @@ export default function App() {
         <S01Splash
           onStart={() => {
             requestLocation(false);
-            setCurrentScreen("time");
+            if (locationError) {
+              setPreviousScreen("time");
+              setCurrentScreen("permission");
+            } else {
+              setCurrentScreen("time");
+            }
+          }}
+          areaLabel={areaLabel}
+          isLocating={isLocating}
+          onLocationClick={() => {
+            setPreviousScreen("splash");
+            setCurrentScreen("permission");
           }}
         />
       )}
