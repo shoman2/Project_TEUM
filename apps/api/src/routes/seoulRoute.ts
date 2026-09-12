@@ -52,8 +52,13 @@ export const seoulRoutes: FastifyPluginAsync = async (fastify) => {
           const label = level2 && level4L ? `${level2} ${level4L}` : text.split(" ").slice(1, 3).join(" ") || "현재 위치";
           return { label, fullAddress: text };
         }
-      } catch {
-        // Fallback below
+        if ((req.query as any).debug) {
+          return { debugData: data, hasKey: Boolean(config.vworld.apiKey), keyLength: config.vworld.apiKey.length };
+        }
+      } catch (err: any) {
+        if ((req.query as any).debug) {
+          return { error: err.message, hasKey: Boolean(config.vworld.apiKey) };
+        }
       }
     }
 
