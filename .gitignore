@@ -1,0 +1,37 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Production builds
+dist/
+build/
+packages/*/dist/
+apps/*/dist/
+
+# Environment files (CRITICAL: NEVER COMMIT KEYS)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Databases & local data
+data/*.db
+data/*.sqlite
+*.db
+*.sqlite
+
+# Vercel & IDEs
+.vercel
+.vscode/
+.idea/
+.DS_Store
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# System generated artifacts
+scratch/
+browser/

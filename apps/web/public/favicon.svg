@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <rect width="64" height="64" rx="16" fill="#F4F1E9"/>
+  <!-- Elegant '틈' glyph with temporal slit spacing -->
+  <g fill="#202522">
+    <!-- ㅌ: upper bar, middle bar, lower bar, left upright -->
+    <path d="M14 18 h16 v4 h-11 v6 h9 v4 h-9 v6 h11 v4 h-16 z"/>
+    <!-- vertical slit separator (틈) -->
+    <rect x="33" y="16" width="3" height="32" rx="1.5" fill="#526779" opacity="0.35"/>
+    <!-- ㅡ : middle horizontal vowel -->
+    <rect x="38" y="27" width="14" height="4" rx="1"/>
+    <!-- ㅁ : lower consonant box -->
+    <path d="M38 34 h14 v12 h-14 z M42 38 v4 h6 v-4 z"/>
+  </g>
+</svg>
